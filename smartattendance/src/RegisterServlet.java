@@ -17,13 +17,37 @@ public class RegisterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_URL =
-        "jdbc:mysql://smartattendance-db-kusumanjaligadupudi-ef99.d.aivencloud.com:21100/defaultdb"
-        + "?sslMode=REQUIRED"
+    private static final String DB_HOST =
+        getEnv("DB_HOST", "localhost");
+
+private static final String DB_PORT =
+        getEnv("DB_PORT", "3306");
+
+private static final String DB_NAME =
+        getEnv("DB_NAME", "smartattendance");
+
+private static final String DB_USER =
+        getEnv("DB_USER", "root");
+
+private static final String DB_PASSWORD =
+        getEnv("DB_PASSWORD", "");
+
+private static final String DB_URL =
+        "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
+        + "?sslMode="
+        + (DB_HOST.equals("localhost") ? "DISABLED" : "REQUIRED")
+        + "&allowPublicKeyRetrieval=true"
         + "&serverTimezone=UTC";
 
-private static final String DB_USER = "avnadmin";
-private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
+private static String getEnv(String name, String defaultValue) {
+    String value = System.getenv(name);
+
+    if (value == null || value.trim().isEmpty()) {
+        return defaultValue;
+    }
+
+    return value.trim();
+}
 
     @Override
     protected void doPost(HttpServletRequest request,
