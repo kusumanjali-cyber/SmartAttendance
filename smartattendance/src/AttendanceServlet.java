@@ -15,13 +15,12 @@ import javax.servlet.http.HttpServletResponse;
 public class AttendanceServlet extends HttpServlet {
 
     private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
+        "jdbc:mysql://smartattendance-db-kusumanjaligadupudi-ef99.d.aivencloud.com:21100/defaultdb"
+        + "?sslMode=REQUIRED"
+        + "&serverTimezone=UTC";
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+private static final String DB_USER = "avnadmin";
+private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     @Override
     protected void doGet(
@@ -100,7 +99,6 @@ public class AttendanceServlet extends HttpServlet {
 
             PreparedStatement ps =
                     con.prepareStatement(sql);
-            ps.setString(1, facultySubject);
             ResultSet rs =
                     ps.executeQuery()
         ) {
@@ -350,129 +348,116 @@ String facultySubject =
         + "ORDER BY ar.attendance_date DESC";
 
         try (
-            Connection con =
-                    DriverManager.getConnection(
-                            DB_URL,
-                            DB_USER,
-                            DB_PASSWORD
-                    );
+    Connection con = DriverManager.getConnection(
+        DB_URL,
+        DB_USER,
+        DB_PASSWORD
+    );
 
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+    PreparedStatement ps = con.prepareStatement(sql)
+) {
 
-            ResultSet rs =
-                    ps.executeQuery()
-        ) {
+    ps.setString(1, facultySubject);
 
-            StringBuilder json =
-                    new StringBuilder();
+    try (ResultSet rs = ps.executeQuery()) {
 
-            json.append("[");
+        StringBuilder json =
+                new StringBuilder();
 
-            boolean first = true;
+        json.append("[");
 
-            while (rs.next()) {
+        boolean first = true;
 
-                if (!first) {
-                    json.append(",");
-                }
+        while (rs.next()) {
 
-                json.append("{");
-
-                json.append("\"id\":")
-                     .append(rs.getInt("id"))
-                     .append(",");
-
-                json.append("\"studentId\":")
-                     .append(rs.getInt("student_id"))
-                     .append(",");
-
-                json.append("\"subjectId\":")
-                     .append(rs.getInt("subject_id"))
-                     .append(",");
-
-                json.append("\"totalClasses\":")
-                     .append(rs.getInt("total_classes"))
-                     .append(",");
-
-                json.append("\"attendedClasses\":")
-                     .append(rs.getInt("attended_classes"))
-                     .append(",");
-
-                json.append("\"attendanceDate\":\"")
-                     .append(
-                         escapeJson(
-                             String.valueOf(
-                                 rs.getDate(
-                                     "attendance_date"
-                                 )
-                             )
-                         )
-                     )
-                     .append("\",");
-
-                json.append("\"studentName\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "student_name"
-                             )
-                         )
-                     )
-                     .append("\",");
-
-                json.append("\"rollNumber\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "roll_number"
-                             )
-                         )
-                     )
-                     .append("\",");
-
-                json.append("\"department\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "department"
-                             )
-                         )
-                     )
-                     .append("\",");
-
-                json.append("\"section\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "section"
-                             )
-                         )
-                     )
-                     .append("\",");
-
-                json.append("\"subjectName\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "subject_name"
-                             )
-                         )
-                     )
-                     .append("\"");
-
-                json.append("}");
-
-                first = false;
+            if (!first) {
+                json.append(",");
             }
 
-            json.append("]");
+            json.append("{");
 
-            response.getWriter().write(
-                    json.toString()
-            );
+            json.append("\"id\":")
+                 .append(rs.getInt("id"))
+                 .append(",");
+
+            json.append("\"studentId\":")
+                 .append(rs.getInt("student_id"))
+                 .append(",");
+
+            json.append("\"subjectId\":")
+                 .append(rs.getInt("subject_id"))
+                 .append(",");
+
+            json.append("\"totalClasses\":")
+                 .append(rs.getInt("total_classes"))
+                 .append(",");
+
+            json.append("\"attendedClasses\":")
+                 .append(rs.getInt("attended_classes"))
+                 .append(",");
+
+            json.append("\"attendanceDate\":\"")
+                 .append(
+                     escapeJson(
+                         String.valueOf(
+                             rs.getDate("attendance_date")
+                         )
+                     )
+                 )
+                 .append("\",");
+
+            json.append("\"studentName\":\"")
+                 .append(
+                     escapeJson(
+                         rs.getString("student_name")
+                     )
+                 )
+                 .append("\",");
+
+            json.append("\"rollNumber\":\"")
+                 .append(
+                     escapeJson(
+                         rs.getString("roll_number")
+                     )
+                 )
+                 .append("\",");
+
+            json.append("\"department\":\"")
+                 .append(
+                     escapeJson(
+                         rs.getString("department")
+                     )
+                 )
+                 .append("\",");
+
+            json.append("\"section\":\"")
+                 .append(
+                     escapeJson(
+                         rs.getString("section")
+                     )
+                 )
+                 .append("\",");
+
+            json.append("\"subjectName\":\"")
+                 .append(
+                     escapeJson(
+                         rs.getString("subject_name")
+                     )
+                 )
+                 .append("\"");
+
+            json.append("}");
+
+            first = false;
         }
+
+        json.append("]");
+
+        response.getWriter().write(
+                json.toString()
+        );
     }
+}
 
 
     /* =========================

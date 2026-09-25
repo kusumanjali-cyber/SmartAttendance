@@ -18,13 +18,12 @@ public class RegisterServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
+        "jdbc:mysql://smartattendance-db-kusumanjaligadupudi-ef99.d.aivencloud.com:21100/defaultdb"
+        + "?sslMode=REQUIRED"
+        + "&serverTimezone=UTC";
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+private static final String DB_USER = "avnadmin";
+private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     @Override
     protected void doPost(HttpServletRequest request,
