@@ -25,14 +25,16 @@ public class RegisterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
+    private static final String DB_HOST = getEnv("DB_HOST", "localhost");
+private static final String DB_PORT = getEnv("DB_PORT", "3306");
+private static final String DB_NAME = getEnv("DB_NAME", "smartattendance");
+private static final String DB_USER = getEnv("DB_USER", "root");
+private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "");
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+private static String getEnv(String key, String defaultValue) {
+    String value = System.getenv(key);
+    return (value == null || value.trim().isEmpty()) ? defaultValue : value;
+}
 
     // ==============================
     // GMAIL SETTINGS
