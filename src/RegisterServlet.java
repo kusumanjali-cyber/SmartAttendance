@@ -35,7 +35,11 @@ private static String getEnv(String key, String defaultValue) {
     String value = System.getenv(key);
     return (value == null || value.trim().isEmpty()) ? defaultValue : value;
 }
-
+private static final String DB_URL =
+        "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
+        + "?sslMode=REQUIRED"
+        + "&allowPublicKeyRetrieval=true"
+        + "&serverTimezone=UTC";
     // ==============================
     // GMAIL SETTINGS
     // ==============================
