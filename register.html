@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Attendance | Register</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5fffa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #16a085;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #16a085;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 12px;
+            border: none;
+            border-radius: 7px;
+            background: #16a085;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #138d75;
+        }
+
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .student-fields {
+            display: none;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #16a085;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Smart Attendance</h1>
+
+        <p class="subtitle">
+            Smart Attendance. Smarter Decisions.
+        </p>
+
+        <form id="registerForm" action="RegisterServlet" method="POST">
+
+            <label for="name">Name</label>
+
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter your name"
+                required
+            >
+
+            <label for="email">Email</label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+            >
+
+            <label for="password">Password</label>
+
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+            >
+
+            <label for="role">Role</label>
+
+            <select id="role" name="role" required>
+
+                <option value="">Select Role</option>
+
+                <option value="STUDENT">Student</option>
+
+                <option value="FACULTY">Faculty</option>
+
+                <option value="ADMIN">Admin</option>
+
+            </select>
+
+
+
+
+            <!-- ==============================
+                 STUDENT FIELDS
+                 ============================== -->
+
+            <div id="studentFields" class="student-fields">
+
+                <label for="rollNumber">Registration Number</label>
+
+                <input
+                    type="text"
+                    id="rollNumber"
+                    name="rollNumber"
+                    placeholder="Enter registration number"
+                >
+
+                <label for="department">Department</label>
+
+                <input
+                    type="text"
+                    id="department"
+                    name="department"
+                    placeholder="Enter department"
+                >
+
+                <label for="year">Year</label>
+
+                <select id="year" name="year">
+
+                    <option value="">Select Year</option>
+
+                    <option value="1">1st Year</option>
+
+                    <option value="2">2nd Year</option>
+
+                    <option value="3">3rd Year</option>
+
+                    <option value="4">4th Year</option>
+
+                </select>
+
+                <label for="section">Section</label>
+
+                <input
+                    type="text"
+                    id="section"
+                    name="section"
+                    placeholder="Enter section"
+                >
+
+            </div>
+
+
+            <button type="submit" id="registerButton">
+
+                Register
+
+            </button>
+
+
+            <div id="message" class="message"></div>
+
+        </form>
+
+    </div>
+
+
+<script>
+
+
+    /* ==============================
+       SHOW STUDENT / FACULTY FIELDS
+       ============================== */
+
+    var role = document.getElementById("role");
+
+    var studentFields =
+        document.getElementById("studentFields");
+
+    role.addEventListener("change", function () {
+
+    if (role.value === "STUDENT") {
+
+        studentFields.style.display = "block";
+
+    }
+
+    else {
+
+        studentFields.style.display = "none";
+
+    }
+
+});
+
+
+    /* ==============================
+       REGISTRATION + WELCOME EMAIL
+       ============================== */
+
+    var registerForm =
+        document.getElementById("registerForm");
+
+    var registerButton =
+        document.getElementById("registerButton");
+
+    var message =
+        document.getElementById("message");
+
+
+    registerForm.addEventListener("submit", function () {
+
+    registerButton.disabled = true;
+    registerButton.innerText = "Registering...";
+
+});
+
+</script>
+
+</body>
+
+</html>

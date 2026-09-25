@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartAttend - Faculty Management</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f8fc;
+            color: #172554;
+        }
+
+        /* ================= NAVBAR ================= */
+
+        .navbar {
+            height: 72px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 6%;
+
+            box-shadow:
+                0 5px 18px rgba(30, 64, 175, 0.18);
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: .3px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .nav-right a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .logout {
+            border: 1px solid rgba(255,255,255,.45);
+            padding: 9px 15px;
+            border-radius: 8px;
+        }
+
+
+        /* ================= PAGE HEADER ================= */
+
+        .page-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+
+            padding: 30px 6%;
+        }
+
+        .page-header h1 {
+            font-size: 30px;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #64748b;
+            font-size: 15px;
+        }
+
+
+        /* ================= CONTAINER ================= */
+
+        .container {
+            width: 88%;
+            max-width: 1250px;
+
+            margin: 30px auto 50px;
+        }
+
+
+        .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            margin-bottom: 22px;
+
+            color: #2563eb;
+            text-decoration: none;
+
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+
+        /* ================= CARD ================= */
+
+        .card {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+
+            padding: 25px;
+            margin-bottom: 24px;
+
+            box-shadow:
+                0 7px 24px rgba(15, 23, 42, 0.06);
+        }
+
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 22px;
+        }
+
+
+        .card-title h2 {
+            font-size: 20px;
+            color: #0f172a;
+        }
+
+
+        .card-title span {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+
+        /* ================= FORM ================= */
+
+        .form-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 17px;
+        }
+
+
+        .field {
+            display: flex;
+            flex-direction: column;
+
+            gap: 7px;
+        }
+
+
+        .field label {
+            font-size: 13px;
+            font-weight: 700;
+
+            color: #334155;
+        }
+
+
+        input {
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+
+            font-size: 14px;
+
+            color: #172554;
+            background: white;
+
+            outline: none;
+
+            transition: .2s;
+        }
+
+
+        input:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37, 99, 235, .10);
+        }
+
+
+        /* ================= BUTTONS ================= */
+
+        .buttons {
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 21px;
+        }
+
+
+        button {
+            border: none;
+            border-radius: 9px;
+
+            padding: 12px 20px;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: .2s;
+        }
+
+
+        button:hover {
+            transform: translateY(-1px);
+            opacity: .94;
+        }
+
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+
+        .secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+
+        .edit {
+            background: #f59e0b;
+            color: white;
+        }
+
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+
+        /* ================= MESSAGE ================= */
+
+        #status {
+            margin-bottom: 18px;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+
+        .success {
+            color: #15803d;
+        }
+
+
+        .error {
+            color: #dc2626;
+        }
+
+
+        /* ================= TABLE HEADER ================= */
+
+        .table-header {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 18px;
+        }
+
+
+        .table-header h2 {
+            font-size: 20px;
+            color: #0f172a;
+        }
+
+
+        .faculty-count {
+            background: #eff6ff;
+
+            color: #1d4ed8;
+
+            padding: 7px 12px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        /* ================= TABLE ================= */
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 850px;
+        }
+
+
+        thead {
+            background: #f8fafc;
+        }
+
+
+        th {
+            padding: 14px 13px;
+
+            text-align: left;
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .4px;
+
+            color: #475569;
+
+            border-bottom:
+                1px solid #e2e8f0;
+        }
+
+
+        td {
+            padding: 15px 13px;
+
+            font-size: 14px;
+
+            color: #334155;
+
+            border-bottom:
+                1px solid #edf2f7;
+        }
+
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+
+        .faculty-name {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+
+        .faculty-id {
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+
+        .action-btn {
+            padding: 8px 12px;
+
+            margin-right: 5px;
+
+            font-size: 12px;
+        }
+
+
+        .empty {
+            text-align: center;
+
+            padding: 35px !important;
+
+            color: #64748b;
+        }
+
+
+        /* ================= FOOTER ================= */
+
+        .footer {
+            text-align: center;
+
+            color: #94a3b8;
+
+            font-size: 13px;
+
+            padding: 20px;
+        }
+
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 750px) {
+
+            .navbar {
+                padding: 0 5%;
+            }
+
+
+            .nav-right a:not(.logout) {
+                display: none;
+            }
+
+
+            .page-header {
+                padding: 25px 5%;
+            }
+
+
+            .page-header h1 {
+                font-size: 24px;
+            }
+
+
+            .container {
+                width: 92%;
+            }
+
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .card {
+                padding: 20px;
+            }
+
+
+            .table-header {
+                align-items: flex-start;
+
+                gap: 10px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<div class="navbar">
+
+    <div class="logo">
+        🎓 SMARTATTEND
+    </div>
+
+
+    <div class="nav-right">
+
+        <a href="admin.html">
+            Dashboard
+        </a>
+
+
+        <a href="admin-students.html">
+            Students
+        </a>
+
+
+        <a href="admin-subjects.html">
+            Subjects
+        </a>
+
+
+        <a
+            href="login.html"
+            class="logout">
+
+            Logout
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ================= PAGE HEADER ================= -->
+
+<div class="page-header">
+
+    <h1>
+        Faculty Management
+    </h1>
+
+
+    <p>
+        Add, update and manage faculty information
+    </p>
+
+</div>
+
+
+<!-- ================= MAIN ================= -->
+
+<div class="container">
+
+
+    <a
+        href="admin.html"
+        class="back">
+
+        ← Back to Admin Dashboard
+
+    </a>
+
+
+    <!-- ================= FORM CARD ================= -->
+
+    <div class="card">
+
+
+        <div class="card-title">
+
+            <h2 id="formTitle">
+                Add Faculty
+            </h2>
+
+
+            <span>
+                Enter faculty details
+            </span>
+
+        </div>
+
+
+        <form id="facultyForm">
+
+
+            <input
+                type="hidden"
+                id="facultyDbId">
+
+
+            <div class="form-grid">
+
+
+                <div class="field">
+
+                    <label for="facultyName">
+                        Faculty Name
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="facultyName"
+                        placeholder="Enter faculty name"
+                        required>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="facultyId">
+                        Faculty ID
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="facultyId"
+                        placeholder="Example: FAC002"
+                        required>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="faculty@gmail.com"
+                        required>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="department">
+                        Department
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="department"
+                        placeholder="Example: CSE"
+                        required>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="buttons">
+
+
+                <button
+                    type="submit"
+                    class="primary">
+
+                    💾 Save Faculty
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="secondary"
+                    onclick="resetForm()">
+
+                    Clear
+
+                </button>
+
+
+            </div>
+
+
+        </form>
+
+
+    </div>
+
+
+    <!-- ================= FACULTY TABLE ================= -->
+
+    <div class="card">
+
+
+        <div class="table-header">
+
+
+            <h2>
+                Registered Faculty
+            </h2>
+
+
+            <span
+                class="faculty-count"
+                id="facultyCount">
+
+                0 Faculty
+
+            </span>
+
+
+        </div>
+
+
+        <div
+            id="status"
+            class="status">
+
+            Loading faculty records...
+
+        </div>
+
+
+        <div class="table-wrap">
+
+
+            <table>
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            S.No
+                        </th>
+
+                        <th>
+                            Faculty Name
+                        </th>
+
+                        <th>
+                            Faculty ID
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Department
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="facultyTable">
+
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty">
+
+                            Loading...
+
+                        </td>
+
+                    </tr>
+
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ================= FOOTER ================= -->
+
+<div class="footer">
+
+    SmartAttend © 2026 —
+    Smart Attendance. Smarter Decisions.
+
+</div>
+
+
+<script>
+
+
+/* ================= DATA ================= */
+
+let facultyData = [];
+
+
+/* ================= LOAD FACULTY ================= */
+
+async function loadFaculty() {
+
+
+    const table =
+        document.getElementById(
+            "facultyTable"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "AdminFacultyServlet"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Server returned " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to load faculty"
+            );
+
+        }
+
+
+        facultyData =
+            data.faculty || [];
+
+
+        table.innerHTML = "";
+
+
+        updateFacultyCount(
+            facultyData.length
+        );
+
+
+        if (
+            facultyData.length === 0
+        ) {
+
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="empty">
+
+                        No faculty records found.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            status.className =
+                "status";
+
+
+            status.textContent =
+                "No faculty records found.";
+
+
+            return;
+
+        }
+
+
+        facultyData.forEach(
+            (faculty, index) => {
+
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+
+                    <td class="faculty-name">
+                        ${escapeHtml(
+                            faculty.facultyName
+                        )}
+                    </td>
+
+
+                    <td class="faculty-id">
+                        ${escapeHtml(
+                            faculty.facultyId
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            faculty.email
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            faculty.department
+                        )}
+                    </td>
+
+
+                    <td>
+
+
+                        <button
+                            class="action-btn edit"
+                            onclick="editFaculty(
+                                ${faculty.id}
+                            )">
+
+                            ✏️ Edit
+
+                        </button>
+
+
+                        <button
+                            class="action-btn danger"
+                            onclick="deleteFaculty(
+                                ${faculty.id}
+                            )">
+
+                            🗑 Delete
+
+                        </button>
+
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(
+                    row
+                );
+
+
+            }
+        );
+
+
+        status.className =
+            "status success";
+
+
+        status.textContent =
+            facultyData.length +
+            " faculty record(s) loaded successfully.";
+
+
+    }
+
+
+    catch (error) {
+
+
+        console.error(error);
+
+
+        updateFacultyCount(0);
+
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="empty error">
+
+                    Unable to load faculty records.
+
+                    <br><br>
+
+                    ${escapeHtml(
+                        error.message
+                    )}
+
+                </td>
+
+            </tr>
+
+        `;
+
+
+        status.className =
+            "status error";
+
+
+        status.textContent =
+            "Faculty loading failed.";
+
+
+    }
+
+}
+
+
+/* ================= COUNT ================= */
+
+function updateFacultyCount(count) {
+
+
+    document.getElementById(
+        "facultyCount"
+    ).textContent =
+
+        count +
+        (
+            count === 1
+                ? " Faculty"
+                : " Faculty"
+        );
+
+}
+
+
+/* ================= SAVE ================= */
+
+document
+    .getElementById("facultyForm")
+    .addEventListener(
+        "submit",
+        async function(event) {
+
+
+            event.preventDefault();
+
+
+            const dbId =
+                document.getElementById(
+                    "facultyDbId"
+                ).value;
+
+
+            const action =
+                dbId
+                    ? "update"
+                    : "add";
+
+
+            const params =
+                new URLSearchParams();
+
+
+            params.append(
+                "action",
+                action
+            );
+
+
+            if (dbId) {
+
+                params.append(
+                    "id",
+                    dbId
+                );
+
+            }
+
+
+            params.append(
+                "facultyName",
+                document.getElementById(
+                    "facultyName"
+                ).value.trim()
+            );
+
+
+            params.append(
+                "facultyId",
+                document.getElementById(
+                    "facultyId"
+                ).value.trim()
+            );
+
+
+            params.append(
+                "email",
+                document.getElementById(
+                    "email"
+                ).value.trim()
+            );
+
+
+            params.append(
+                "department",
+                document.getElementById(
+                    "department"
+                ).value.trim()
+            );
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        "AdminFacultyServlet",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded"
+
+                            },
+
+                            body:
+                                params.toString()
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+
+                    alert(
+                        data.message ||
+                        "Operation failed."
+                    );
+
+
+                    return;
+
+                }
+
+
+                alert(
+                    data.message ||
+                    "Faculty saved successfully."
+                );
+
+
+                resetForm();
+
+
+                loadFaculty();
+
+
+            }
+
+
+            catch (error) {
+
+
+                console.error(error);
+
+
+                alert(
+                    "Server error. Please try again."
+                );
+
+
+            }
+
+        }
+    );
+
+
+/* ================= EDIT ================= */
+
+function editFaculty(id) {
+
+
+    const faculty =
+        facultyData.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+
+    if (!faculty) {
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "facultyDbId"
+    ).value =
+        faculty.id;
+
+
+    document.getElementById(
+        "facultyName"
+    ).value =
+        faculty.facultyName || "";
+
+
+    document.getElementById(
+        "facultyId"
+    ).value =
+        faculty.facultyId || "";
+
+
+    document.getElementById(
+        "email"
+    ).value =
+        faculty.email || "";
+
+
+    document.getElementById(
+        "department"
+    ).value =
+        faculty.department || "";
+
+
+    document.getElementById(
+        "formTitle"
+    ).textContent =
+        "Edit Faculty";
+
+
+    window.scrollTo({
+
+        top: 0,
+
+        behavior: "smooth"
+
+    });
+
+}
+
+
+/* ================= DELETE ================= */
+
+async function deleteFaculty(id) {
+
+
+    const faculty =
+        facultyData.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+
+    if (!faculty) {
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            "Delete faculty \"" +
+            faculty.facultyName +
+            "\"?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const params =
+        new URLSearchParams();
+
+
+    params.append(
+        "action",
+        "delete"
+    );
+
+
+    params.append(
+        "id",
+        id
+    );
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "AdminFacultyServlet",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/x-www-form-urlencoded"
+
+                    },
+
+                    body:
+                        params.toString()
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+
+            alert(
+                data.message ||
+                "Delete failed."
+            );
+
+
+            return;
+
+        }
+
+
+        alert(
+            data.message ||
+            "Faculty deleted successfully."
+        );
+
+
+        loadFaculty();
+
+
+    }
+
+
+    catch (error) {
+
+
+        console.error(error);
+
+
+        alert(
+            "Server error while deleting faculty."
+        );
+
+
+    }
+
+}
+
+
+/* ================= RESET ================= */
+
+function resetForm() {
+
+
+    document
+        .getElementById(
+            "facultyForm"
+        )
+        .reset();
+
+
+    document
+        .getElementById(
+            "facultyDbId"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "formTitle"
+        )
+        .textContent =
+            "Add Faculty";
+
+}
+
+
+/* ================= ESCAPE HTML ================= */
+
+function escapeHtml(value) {
+
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* ================= INITIAL LOAD ================= */
+
+loadFaculty();
+
+</script>
+
+
+</body>
+</html>

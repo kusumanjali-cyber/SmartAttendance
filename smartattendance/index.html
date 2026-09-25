@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>SmartAttend | Select Role</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            min-height: 100vh;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef4ff 0%,
+                    #f8fbff 50%,
+                    #eef0ff 100%
+                );
+
+            color: #0f172a;
+
+            display: flex;
+            flex-direction: column;
+
+            align-items: center;
+
+            padding: 40px 20px;
+        }
+
+
+        /* =================================
+           HEADER
+           ================================= */
+
+        .header {
+
+            text-align: center;
+
+            margin-bottom: 40px;
+        }
+
+
+        .main-logo {
+
+            width: 82px;
+            height: 82px;
+
+            margin: 0 auto 18px;
+
+            border-radius: 20px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0f2f5f,
+                    #2563eb
+                );
+
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            font-size: 43px;
+
+            box-shadow:
+                0 12px 30px
+                rgba(15, 47, 95, 0.20);
+        }
+
+
+        .header h1 {
+
+            font-size: 42px;
+
+            letter-spacing: 2px;
+
+            font-weight: 800;
+
+            color: #0f2f5f;
+        }
+
+
+        .subtitle {
+
+            margin-top: 10px;
+
+            color: #64748b;
+
+            font-size: 16px;
+        }
+
+
+        /* =================================
+           PAGE TITLE
+           ================================= */
+
+        .page-title {
+
+            text-align: center;
+
+            margin-bottom: 28px;
+        }
+
+
+        .page-title h2 {
+
+            font-size: 27px;
+
+            color: #1e293b;
+
+            margin-bottom: 7px;
+        }
+
+
+        .page-title p {
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+
+        /* =================================
+           ROLE CONTAINER
+           ================================= */
+
+        .container {
+
+            width: 100%;
+
+            max-width: 1100px;
+        }
+
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 25px;
+        }
+
+
+        /* =================================
+           ROLE CARD
+           ================================= */
+
+        .card {
+
+            background: #ffffff;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 18px;
+
+            padding: 35px 28px;
+
+            min-height: 390px;
+
+            text-align: center;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            box-shadow:
+                0 15px 40px
+                rgba(15, 23, 42, 0.08);
+
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease;
+        }
+
+
+        .card:hover {
+
+            transform:
+                translateY(-6px);
+
+            box-shadow:
+                0 22px 45px
+                rgba(15, 23, 42, 0.13);
+        }
+
+
+        /* =================================
+           ROLE ICON
+           ================================= */
+
+        .icon-box {
+
+            width: 105px;
+            height: 105px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 55px;
+
+            margin-bottom: 23px;
+        }
+
+
+        .faculty-icon {
+
+            background: #eaf2ff;
+        }
+
+
+        .student-icon {
+
+            background: #eafaf2;
+        }
+
+
+        .admin-icon {
+
+            background: #f2edff;
+        }
+
+
+        /* =================================
+           CARD CONTENT
+           ================================= */
+
+        .card h3 {
+
+            font-size: 24px;
+
+            color: #0f172a;
+
+            letter-spacing: 0.5px;
+
+            margin-bottom: 12px;
+        }
+
+
+        .line {
+
+            width: 45px;
+
+            height: 3px;
+
+            border-radius: 10px;
+
+            background: #2563eb;
+
+            margin-bottom: 18px;
+        }
+
+
+        .card p {
+
+            color: #64748b;
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+            min-height: 72px;
+
+            margin-bottom: 25px;
+        }
+
+
+        /* =================================
+           ENTER BUTTON
+           ================================= */
+
+        .enter-btn {
+
+            margin-top: auto;
+
+            width: 170px;
+
+            height: 46px;
+
+            border: none;
+
+            border-radius: 9px;
+
+            color: #ffffff;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+
+        .faculty-btn {
+
+            background: #2563eb;
+        }
+
+
+        .student-btn {
+
+            background: #16a34a;
+        }
+
+
+        .admin-btn {
+
+            background: #7c3aed;
+        }
+
+
+        .enter-btn:hover {
+
+            transform:
+                translateY(-2px);
+
+            box-shadow:
+                0 8px 18px
+                rgba(15, 23, 42, 0.16);
+        }
+
+
+        /* =================================
+           FOOTER
+           ================================= */
+
+        .footer {
+
+            margin-top: 38px;
+
+            color: #94a3b8;
+
+            font-size: 12px;
+
+            text-align: center;
+        }
+
+
+        /* =================================
+           LOGOUT
+           ================================= */
+
+        .logout-btn {
+
+            position: fixed;
+
+            top: 20px;
+
+            right: 25px;
+
+            border: 1px solid #cbd5e1;
+
+            background: #ffffff;
+
+            color: #475569;
+
+            padding: 9px 15px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+
+        .logout-btn:hover {
+
+            background: #f8fafc;
+
+            border-color: #94a3b8;
+        }
+
+
+        /* =================================
+           RESPONSIVE
+           ================================= */
+
+        @media (max-width: 850px) {
+
+            .cards {
+
+                grid-template-columns: 1fr;
+
+                max-width: 480px;
+
+                margin: auto;
+            }
+
+
+            .card {
+
+                min-height: 350px;
+            }
+
+
+            .header h1 {
+
+                font-size: 34px;
+            }
+        }
+
+
+        @media (max-width: 500px) {
+
+            body {
+
+                padding:
+                    30px 15px;
+            }
+
+
+            .logout-btn {
+
+                position: static;
+
+                margin-bottom: 20px;
+            }
+
+
+            .header {
+
+                margin-bottom: 30px;
+            }
+
+
+            .header h1 {
+
+                font-size: 29px;
+            }
+
+
+            .subtitle {
+
+                font-size: 14px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =================================
+         LOGOUT
+         ================================= -->
+
+    <button
+        class="logout-btn"
+        onclick="logout()">
+
+        ↩ Logout
+
+    </button>
+
+
+
+    <!-- =================================
+         HEADER
+         ================================= -->
+
+    <header class="header">
+
+        <div class="main-logo">
+            🎓
+        </div>
+
+        <h1>
+            SMARTATTEND
+        </h1>
+
+        <p class="subtitle">
+            Smart Attendance. Smarter Decisions.
+        </p>
+
+    </header>
+
+
+
+    <!-- =================================
+         TITLE
+         ================================= -->
+
+    <div class="page-title">
+
+        <h2>
+            Select Your Role
+        </h2>
+
+        <p>
+            Choose your role to continue to your dashboard
+        </p>
+
+    </div>
+
+
+
+    <!-- =================================
+         ROLE CARDS
+         ================================= -->
+
+    <main class="container">
+
+        <div class="cards">
+
+
+            <!-- =================================
+                 FACULTY
+                 ================================= -->
+
+            <div class="card">
+
+                <div class="icon-box faculty-icon">
+                    👩‍🏫
+                </div>
+
+                <h3>
+                    Faculty
+                </h3>
+
+                <div class="line"></div>
+
+                <p>
+                    Manage attendance, marks
+                    and view student reports.
+                </p>
+
+                <button
+                    class="enter-btn faculty-btn"
+                    onclick="selectRole('FACULTY')">
+
+                    Enter Faculty Portal →
+
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================
+                 STUDENT
+                 ================================= -->
+
+            <div class="card">
+
+                <div class="icon-box student-icon">
+                    🎓
+                </div>
+
+                <h3>
+                    Student
+                </h3>
+
+                <div class="line"></div>
+
+                <p>
+                    View attendance, marks
+                    and academic performance.
+                </p>
+
+                <button
+                    class="enter-btn student-btn"
+                    onclick="selectRole('STUDENT')">
+
+                    Enter Student Portal →
+
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================
+                 ADMIN
+                 ================================= -->
+
+            <div class="card">
+
+                <div class="icon-box admin-icon">
+                    👨‍💼
+                </div>
+
+                <h3>
+                    Admin
+                </h3>
+
+                <div class="line"></div>
+
+                <p>
+                    Manage students, faculty,
+                    subjects and system settings.
+                </p>
+
+                <button
+                    class="enter-btn admin-btn"
+                    onclick="selectRole('ADMIN')">
+
+                    Enter Admin Portal →
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- =================================
+         FOOTER
+         ================================= -->
+
+    <div class="footer">
+
+        © 2026 SmartAttend
+        &nbsp;•&nbsp;
+        Smart Academic Management System
+
+    </div>
+
+
+
+    <script>
+
+
+        // ==========================================
+        // SELECT ROLE
+        // ==========================================
+
+        function selectRole(role) {
+
+            /*
+             * Store the selected role temporarily.
+             *
+             * The next dashboard pages will use this
+             * information together with the login session.
+             */
+
+            sessionStorage.setItem(
+                "selectedRole",
+                role
+            );
+
+
+            // ==============================
+            // OPEN CORRECT DASHBOARD
+            // ==============================
+
+            if (role === "FACULTY") {
+
+                window.location.href =
+                    "faculty.html";
+
+            }
+
+            else if (role === "STUDENT") {
+
+                window.location.href =
+                    "student.html";
+
+            }
+
+            else if (role === "ADMIN") {
+
+                window.location.href =
+                    "admin.html";
+
+            }
+
+        }
+
+
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+
+        function logout() {
+
+            sessionStorage.clear();
+
+            /*
+             * At this stage this clears the browser-side
+             * role information.
+             *
+             * Proper server-session logout will be added
+             * when we finish the servlet/session files.
+             */
+
+            window.location.href =
+                "login.html";
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>

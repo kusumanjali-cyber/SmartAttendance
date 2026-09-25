@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Attendance - Student Report</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f8fd;
+    color: #17365d;
+}
+
+.topbar {
+    height: 72px;
+    background: linear-gradient(90deg, #07549b, #126bc2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: bold;
+}
+
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.logout {
+    border: 1px solid white;
+    background: transparent;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.layout {
+    display: flex;
+    min-height: calc(100vh - 72px);
+}
+
+.sidebar {
+    width: 240px;
+    background: white;
+    border-right: 1px solid #dce7f2;
+    padding: 25px 12px;
+}
+
+.side-item {
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    color: #123d6b;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.side-item:hover,
+.side-active {
+    background: #5ca4e9;
+    color: white;
+}
+
+.main {
+    flex: 1;
+    padding: 28px;
+    overflow-x: auto;
+}
+
+.title {
+    font-size: 30px;
+    font-weight: bold;
+    color: #0b4b88;
+}
+
+.subtitle {
+    margin-top: 8px;
+    color: #58708c;
+    font-size: 15px;
+}
+
+.filters {
+    margin-top: 24px;
+    background: white;
+    border: 1px solid #dce7f2;
+    border-radius: 10px;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 140px;
+    gap: 16px;
+    align-items: end;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #164675;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d6e2ef;
+    border-radius: 7px;
+    background: white;
+    font-size: 14px;
+}
+
+.search-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 7px;
+    background: #126bc2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.summary-card {
+    background: white;
+    border: 1px solid #dce7f2;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.summary-label {
+    color: #60758e;
+    font-size: 14px;
+}
+
+.summary-value {
+    margin-top: 10px;
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.blue {
+    color: #0867c5;
+}
+
+.green {
+    color: #0c9b60;
+}
+
+.red {
+    color: #ed3030;
+}
+
+.purple {
+    color: #7546db;
+}
+
+.report {
+    background: white;
+    margin-top: 22px;
+    border: 1px solid #dce7f2;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.report-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.report-head h2 {
+    color: #0b4b88;
+    font-size: 20px;
+}
+
+.export-btn {
+    background: white;
+    color: #075ca9;
+    border: 1px solid #cbdceb;
+    padding: 9px 15px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+}
+
+th {
+    background: #edf5fc;
+    color: #0b447c;
+    padding: 13px 10px;
+    text-align: left;
+    font-size: 13px;
+    border: 1px solid #dce8f3;
+}
+
+td {
+    padding: 12px 10px;
+    border: 1px solid #e0e9f2;
+    font-size: 13px;
+}
+
+.good {
+    color: #079653;
+    font-weight: bold;
+}
+
+.low {
+    color: #ef3030;
+    font-weight: bold;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.good-badge {
+    background: #d8f7e4;
+    color: #087f45;
+}
+
+.low-badge {
+    background: #ffe0e0;
+    color: #d72222;
+}
+
+.view-btn {
+    background: #126bc2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 15px;
+    cursor: pointer;
+}
+
+.empty {
+    text-align: center;
+    padding: 45px;
+    color: #71859a;
+}
+
+.error {
+    text-align: center;
+    padding: 30px;
+    color: #d22b2b;
+    font-weight: bold;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    width: 480px;
+    max-width: 92%;
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.modal-box h2 {
+    color: #0b4b88;
+    margin-bottom: 18px;
+}
+
+.close {
+    float: right;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.detail-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #e4ebf2;
+}
+
+.mark-btn {
+    margin-top: 18px;
+    background: #126bc2;
+    color: white;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+@media(max-width: 900px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    .summary {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media(max-width: 600px) {
+
+    .summary {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar {
+        padding: 0 15px;
+    }
+
+    .main {
+        padding: 15px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="logo">
+        🎓 Smart Attendance System
+    </div>
+
+    <div class="top-right">
+        <span id="welcome">Welcome, Faculty</span>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="side-item" onclick="location.href='faculty.html'">
+            🏠 Dashboard
+        </div>
+
+        <div class="side-item" onclick="location.href='attendance.html'">
+            📅 Mark Attendance
+        </div>
+
+        <div class="side-item side-active">
+            👥 Student Report
+        </div>
+
+        <div class="side-item" onclick="location.href='marks.html'">
+            📄 Marks
+        </div>
+
+        <div class="side-item">
+            🔔 Notifications
+        </div>
+
+    </aside>
+
+    <main class="main">
+
+        <div class="title">Student Report</div>
+
+        <div class="subtitle">
+            View registered students, attendance details and students below 75%.
+        </div>
+
+        <div class="filters">
+
+            <div>
+                <label>Branch</label>
+
+                <select id="branch">
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="IT">IT</option>
+                    <option value="MECH">MECH</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Section</label>
+
+                <select id="section">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Year</label>
+
+                <select id="year">
+                    <option value="All">All</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <button class="search-btn" onclick="loadStudents()">
+                🔍 Search
+            </button>
+
+        </div>
+
+        <div class="summary">
+
+            <div class="summary-card">
+                <div class="summary-label">Total Students</div>
+                <div class="summary-value blue" id="totalStudents">0</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Above 75%</div>
+                <div class="summary-value green" id="above75">0</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Below 75%</div>
+                <div class="summary-value red" id="below75">0</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Average Attendance</div>
+                <div class="summary-value purple" id="average">0.00%</div>
+            </div>
+
+        </div>
+
+        <section class="report">
+
+            <div class="report-head">
+
+                <h2 id="reportTitle">
+                    Students List
+                </h2>
+
+                <button class="export-btn" onclick="exportCSV()">
+                    ⬇ Export CSV
+                </button>
+
+            </div>
+
+            <div id="message"></div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>S.No</th>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Year</th>
+                            <th>Total Classes</th>
+                            <th>Attended Classes</th>
+                            <th>Attendance %</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="studentBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div class="modal" id="studentModal">
+
+    <div class="modal-box">
+
+        <span class="close" onclick="closeModal()">×</span>
+
+        <h2>Student Details</h2>
+
+        <div id="studentDetails"></div>
+
+        <button class="mark-btn" onclick="openMarks()">
+            📝 Enter Marks
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+let students = [];
+let selectedStudent = null;
+
+window.onload = function() {
+
+    const name = sessionStorage.getItem("name");
+
+    if (name) {
+        document.getElementById("welcome").textContent =
+            "Welcome, " + name;
+    }
+
+    loadStudents();
+};
+
+function loadStudents() {
+
+    const branch =
+        document.getElementById("branch").value;
+
+    const section =
+        document.getElementById("section").value;
+
+    const year =
+        document.getElementById("year").value;
+
+    document.getElementById("reportTitle").textContent =
+        "Students List (" + branch + " - " + section + ")";
+
+    document.getElementById("message").innerHTML =
+        '<div class="empty">Loading students...</div>';
+
+    let url =
+        "FacultyStudentsReportServlet?branch="
+        + encodeURIComponent(branch)
+        + "&section="
+        + encodeURIComponent(section);
+
+    if (year !== "All") {
+        url += "&year=" + encodeURIComponent(year);
+    }
+
+    fetch(url)
+
+        .then(function(response) {
+
+            if (!response.ok) {
+                throw new Error(
+                    "Server returned " + response.status
+                );
+            }
+
+            return response.json();
+        })
+
+        .then(function(data) {
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.message || "Unable to load students"
+                );
+            }
+
+            students =
+                Array.isArray(data.students)
+                ? data.students
+                : [];
+
+            renderStudents();
+
+        })
+
+        .catch(function(error) {
+
+            console.error(error);
+
+            students = [];
+
+            document.getElementById("studentBody").innerHTML = "";
+
+            document.getElementById("message").innerHTML =
+                '<div class="error">' +
+                'Unable to load student report.<br>' +
+                escapeHTML(error.message) +
+                '</div>';
+
+            updateSummary();
+        });
+}
+
+function renderStudents() {
+
+    const body =
+        document.getElementById("studentBody");
+
+    document.getElementById("message").innerHTML = "";
+
+    body.innerHTML = "";
+
+    if (students.length === 0) {
+
+        body.innerHTML =
+            '<tr><td colspan="10" class="empty">' +
+            'No students found for the selected Branch and Section.' +
+            '</td></tr>';
+
+        updateSummary();
+        return;
+    }
+
+    students.forEach(function(student, index) {
+
+        const percentage =
+            Number(student.attendancePercentage || 0);
+
+        const status =
+            percentage >= 75 ? "Good" : "Low";
+
+        const percentageClass =
+            percentage >= 75 ? "good" : "low";
+
+        const badgeClass =
+            percentage >= 75
+            ? "good-badge"
+            : "low-badge";
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML =
+
+            "<td>" + (index + 1) + "</td>" +
+
+            "<td>" +
+            escapeHTML(student.rollNumber) +
+            "</td>" +
+
+            "<td>" +
+            escapeHTML(student.studentName) +
+            "</td>" +
+
+            "<td>" +
+            escapeHTML(student.email) +
+            "</td>" +
+
+            "<td>" +
+            escapeHTML(student.year) +
+            "</td>" +
+
+            "<td>" +
+            Number(student.totalClasses || 0) +
+            "</td>" +
+
+            "<td>" +
+            Number(student.attendedClasses || 0) +
+            "</td>" +
+
+            "<td class='" + percentageClass + "'>" +
+            percentage.toFixed(2) +
+            "%" +
+            "</td>" +
+
+            "<td>" +
+            "<span class='badge " + badgeClass + "'>" +
+            status +
+            "</span>" +
+            "</td>" +
+
+            "<td>" +
+            "<button class='view-btn' " +
+            "onclick='viewStudent(" + index + ")'>" +
+            "View" +
+            "</button>" +
+            "</td>";
+
+        body.appendChild(row);
+    });
+
+    updateSummary();
+}
+
+function updateSummary() {
+
+    const total = students.length;
+
+    let above = 0;
+    let below = 0;
+    let sum = 0;
+
+    students.forEach(function(student) {
+
+        const percentage =
+            Number(student.attendancePercentage || 0);
+
+        sum += percentage;
+
+        if (percentage >= 75) {
+            above++;
+        } else {
+            below++;
+        }
+    });
+
+    const average =
+        total > 0 ? sum / total : 0;
+
+    document.getElementById("totalStudents").textContent =
+        total;
+
+    document.getElementById("above75").textContent =
+        above;
+
+    document.getElementById("below75").textContent =
+        below;
+
+    document.getElementById("average").textContent =
+        average.toFixed(2) + "%";
+}
+
+function viewStudent(index) {
+
+    selectedStudent = students[index];
+
+    const percentage =
+        Number(selectedStudent.attendancePercentage || 0);
+
+    document.getElementById("studentDetails").innerHTML =
+
+        "<div class='detail-row'><b>Name:</b> " +
+        escapeHTML(selectedStudent.studentName) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Roll Number:</b> " +
+        escapeHTML(selectedStudent.rollNumber) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Email:</b> " +
+        escapeHTML(selectedStudent.email) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Branch:</b> " +
+        escapeHTML(selectedStudent.department) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Section:</b> " +
+        escapeHTML(selectedStudent.section) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Total Classes:</b> " +
+        Number(selectedStudent.totalClasses || 0) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Attended Classes:</b> " +
+        Number(selectedStudent.attendedClasses || 0) +
+        "</div>" +
+
+        "<div class='detail-row'><b>Attendance:</b> " +
+        percentage.toFixed(2) +
+        "%</div>";
+
+    document.getElementById("studentModal").style.display =
+        "flex";
+}
+
+function closeModal() {
+
+    document.getElementById("studentModal").style.display =
+        "none";
+}
+
+function openMarks() {
+
+    if (!selectedStudent) {
+        return;
+    }
+
+    sessionStorage.setItem(
+        "selectedStudentId",
+        selectedStudent.id
+    );
+
+    sessionStorage.setItem(
+        "selectedStudentName",
+        selectedStudent.studentName
+    );
+
+    location.href = "marks.html";
+}
+
+function exportCSV() {
+
+    if (students.length === 0) {
+        alert("No students to export.");
+        return;
+    }
+
+    let csv =
+        "S.No,Roll Number,Student Name,Email,Year,Total Classes,Attended Classes,Attendance %,Status\n";
+
+    students.forEach(function(student, index) {
+
+        const percentage =
+            Number(student.attendancePercentage || 0);
+
+        const status =
+            percentage >= 75 ? "Good" : "Low";
+
+        csv +=
+            (index + 1) + "," +
+            csvValue(student.rollNumber) + "," +
+            csvValue(student.studentName) + "," +
+            csvValue(student.email) + "," +
+            csvValue(student.year) + "," +
+            Number(student.totalClasses || 0) + "," +
+            Number(student.attendedClasses || 0) + "," +
+            percentage.toFixed(2) + "%," +
+            status +
+            "\n";
+    });
+
+    const blob =
+        new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+    link.download = "student_report.csv";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function csvValue(value) {
+
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    return '"' +
+        String(value).replace(/"/g, '""') +
+        '"';
+}
+
+function escapeHTML(value) {
+
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function logout() {
+
+    sessionStorage.clear();
+
+    location.href = "login.html";
+}
+
+window.onclick = function(event) {
+
+    const modal =
+        document.getElementById("studentModal");
+
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+
+</script>
+
+</body>
+</html>

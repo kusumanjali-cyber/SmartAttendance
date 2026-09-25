@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartAttend - Marks</title>
+
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #eef5ff, #f5f0ff);
+            min-height: 100vh;
+            color: #222;
+        }
+
+        .topbar {
+            background: white;
+            padding: 18px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .brand {
+            font-size: 25px;
+            font-weight: bold;
+            color: #315bea;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            background: #315bea;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title h1 {
+            font-size: 30px;
+        }
+
+        .page-title p {
+            margin-top: 7px;
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d5d9e2;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: #315bea;
+        }
+
+        .students-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .students-title h2 {
+            font-size: 21px;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #315bea;
+            color: white;
+            padding: 13px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f8faff;
+        }
+
+        .marks-input {
+            width: 120px;
+        }
+
+        .save-area {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .save-btn {
+            border: none;
+            background: #315bea;
+            color: white;
+            padding: 13px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .save-btn:hover {
+            background: #2448c7;
+        }
+
+        .save-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            background: #e8f7ed;
+            color: #16743a;
+        }
+
+        .error {
+            background: #fdecec;
+            color: #b42318;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        @media (max-width: 850px) {
+            .filters {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 550px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                padding: 15px;
+            }
+
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+
+    <div class="brand">
+        SmartAttend
+    </div>
+
+    <a href="faculty.html" class="back-btn">
+        ← Faculty Dashboard
+    </a>
+
+</div>
+
+
+<div class="container">
+
+    <div class="page-title">
+
+        <h1>📊 Marks Management</h1>
+
+        <p>Enter and manage student marks</p>
+
+    </div>
+
+
+    <!-- FILTERS -->
+
+    <div class="card">
+
+        <div class="filters">
+
+            <div class="field">
+
+                <label for="subject">
+                    Subject
+                </label>
+
+                <select id="subject">
+
+                    <option value="">
+                        Select Subject
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="branch">
+                    Branch
+                </label>
+
+                <select id="branch">
+
+                    <option value="">
+                        All Branches
+                    </option>
+
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="CIVIL">CIVIL</option>
+                    <option value="IT">IT</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="section">
+                    Section
+                </label>
+
+                <select id="section">
+
+                    <option value="">
+                        All Sections
+                    </option>
+
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="examType">
+                    Examination
+                </label>
+
+                <select id="examType">
+
+                    <option value="Mid 1">
+                        Mid 1
+                    </option>
+
+                    <option value="Mid 2">
+                        Mid 2
+                    </option>
+
+                    <option value="Course Activity">
+                        Course Activity
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- STUDENTS -->
+
+    <div class="card">
+
+        <div class="students-title">
+
+            <h2>👨‍🎓 Student List</h2>
+
+            <span
+                id="studentStatus"
+                class="status">
+
+                Loading students...
+
+            </span>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>S.No</th>
+                        <th>Student Name</th>
+                        <th>Register No</th>
+                        <th>Marks</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="studentTableBody">
+
+                    <tr>
+
+                        <td
+                            colspan="4"
+                            class="loading">
+
+                            Loading students...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <div class="save-area">
+
+            <button
+                id="saveAllBtn"
+                class="save-btn"
+                onclick="saveAllMarks()"
+                disabled>
+
+                💾 Save All Marks
+
+            </button>
+
+        </div>
+
+
+        <div
+            id="message"
+            class="message">
+        </div>
+
+    </div>
+
+
+    <!-- SAVED MARKS -->
+
+    <div class="card">
+
+        <div class="students-title">
+
+            <h2>📋 Saved Marks</h2>
+
+            <span
+                id="savedStatus"
+                class="status">
+
+                Select subject
+
+            </span>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>S.No</th>
+                        <th>Student</th>
+                        <th>Subject</th>
+                        <th>Exam</th>
+                        <th>Marks</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="savedMarksBody">
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty">
+
+                            Select a subject to view saved marks.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   EMAILJS INITIALIZATION
+===================================================== */
+
+emailjs.init({
+    publicKey: "3Om3V0_tb1ckVZWIS"
+});
+
+
+/* =====================================================
+   SERVLET URLs
+===================================================== */
+
+const SUBJECTS_URL =
+    "FacultySubjectsServlet";
+
+const STUDENTS_URL =
+    "FacultyStudentsServlet";
+
+const MARKS_URL =
+    "FacultyMarkServlet";
+
+
+/* =====================================================
+   EMAILJS DETAILS
+===================================================== */
+
+const EMAIL_SERVICE_ID =
+    "service_utrl2ct";
+
+const MARKS_EMAIL_TEMPLATE_ID =
+    "template_j2ajnx4";
+
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+let students = [];
+let subjects = [];
+let allSavedMarks = [];
+
+
+/* =====================================================
+   GET MAXIMUM MARKS INTERNALLY
+===================================================== */
+
+function getMaxMarks() {
+
+    const examType =
+        document.getElementById("examType").value;
+
+    if (examType === "Course Activity") {
+        return 5;
+    }
+
+    return 15;
+}
+
+
+/* =====================================================
+   LOAD SUBJECTS
+===================================================== */
+
+async function loadSubjects() {
+
+    const select =
+        document.getElementById("subject");
+
+    try {
+
+        const response =
+            await fetch(
+                SUBJECTS_URL,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+        console.log(
+            "FacultySubjectsServlet:",
+            data
+        );
+
+        if (data.success !== true) {
+
+            throw new Error(
+                data.message ||
+                "Subject request failed"
+            );
+
+        }
+
+        subjects =
+            Array.isArray(data.subjects)
+                ? data.subjects
+                : [];
+
+        select.innerHTML =
+            '<option value="">-- Select Subject --</option>';
+
+        subjects.forEach(
+            function(subject) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    subject.id;
+
+                option.textContent =
+                    subject.name;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+        if (subjects.length === 0) {
+
+            select.innerHTML =
+                '<option value="">No subjects found</option>';
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Subject error:",
+            error
+        );
+
+        select.innerHTML =
+            '<option value="">Select Subject</option>';
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD STUDENTS
+===================================================== */
+
+async function loadStudents() {
+
+    const tbody =
+        document.getElementById(
+            "studentTableBody"
+        );
+
+    const status =
+        document.getElementById(
+            "studentStatus"
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                STUDENTS_URL,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+        console.log(
+            "FacultyStudentsServlet:",
+            data
+        );
+
+        if (data.success !== true) {
+
+            throw new Error(
+                data.message ||
+                "Student request failed"
+            );
+
+        }
+
+        students =
+            Array.isArray(data.students)
+                ? data.students
+                : [];
+
+        displayStudents();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Student error:",
+            error
+        );
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    class="empty">
+
+                    Unable to load students.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        status.textContent =
+            "Unable to load students";
+
+    }
+
+}
+
+
+/* =====================================================
+   DISPLAY STUDENTS
+   FILTER BY BRANCH + SECTION
+===================================================== */
+
+function displayStudents() {
+
+    const tbody =
+        document.getElementById(
+            "studentTableBody"
+        );
+
+    const status =
+        document.getElementById(
+            "studentStatus"
+        );
+
+    const selectedBranch =
+        String(
+            document.getElementById("branch").value || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    const selectedSection =
+        String(
+            document.getElementById("section").value || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    tbody.innerHTML = "";
+
+
+    const filteredStudents =
+        students.filter(
+            function(student) {
+
+                const studentBranch =
+                    String(
+                        student.department ||
+                        student.branch ||
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const studentSection =
+                    String(
+                        student.section ||
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase();
+
+                const branchMatches =
+                    !selectedBranch ||
+                    studentBranch === selectedBranch;
+
+                const sectionMatches =
+                    !selectedSection ||
+                    studentSection === selectedSection;
+
+                return (
+                    branchMatches &&
+                    sectionMatches
+                );
+
+            }
+        );
+
+
+    if (
+        filteredStudents.length === 0
+    ) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    class="empty">
+
+                    No students found for the selected
+                    Branch and Section.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        status.textContent =
+            "0 students";
+
+        document.getElementById(
+            "saveAllBtn"
+        ).disabled = true;
+
+        return;
+
+    }
+
+
+    const maxMarks =
+        getMaxMarks();
+
+    filteredStudents.forEach(
+        function(student, index) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+            const id =
+                student.id ||
+                student.student_id ||
+                student.studentId;
+
+            const name =
+                student.name ||
+                student.student_name ||
+                student.studentName ||
+                "";
+
+            const roll =
+                student.rollNumber ||
+                student.roll_number ||
+                student.rollNo ||
+                "";
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    <strong>
+                        ${escapeHtml(name)}
+                    </strong>
+                </td>
+
+                <td>
+                    ${escapeHtml(roll)}
+                </td>
+
+                <td>
+
+                    <input
+                        type="number"
+                        class="marks-input"
+                        min="0"
+                        max="${maxMarks}"
+                        step="0.01"
+                        placeholder="Enter marks"
+                        data-student-id="${id}"
+                    >
+
+                </td>
+
+            `;
+
+            tbody.appendChild(row);
+
+        }
+    );
+
+
+    status.textContent =
+        filteredStudents.length +
+        " student" +
+        (
+            filteredStudents.length === 1
+                ? ""
+                : "s"
+        );
+
+    document.getElementById(
+        "saveAllBtn"
+    ).disabled = false;
+
+}
+
+
+/* =====================================================
+   SEND MARKS EMAIL
+===================================================== */
+
+async function sendMarksEmail(
+    student,
+    subjectName,
+    marks
+) {
+
+    const studentEmail =
+        student.email ||
+        student.student_email ||
+        student.emailAddress ||
+        "";
+
+    const studentName =
+        student.name ||
+        student.student_name ||
+        student.studentName ||
+        "Student";
+
+
+    if (!studentEmail) {
+
+        console.warn(
+            "No email found for student:",
+            student
+        );
+
+        return false;
+
+    }
+
+
+    try {
+
+        await emailjs.send(
+            EMAIL_SERVICE_ID,
+            MARKS_EMAIL_TEMPLATE_ID,
+            {
+                name: studentName,
+                subject: subjectName,
+                marks: marks,
+                email: studentEmail
+            }
+        );
+
+        console.log(
+            "Marks email sent to:",
+            studentEmail
+        );
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Marks email error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =====================================================
+   SAVE MARKS
+===================================================== */
+
+async function saveAllMarks() {
+
+    const subjectId =
+        document.getElementById(
+            "subject"
+        ).value;
+
+    const examType =
+        document.getElementById(
+            "examType"
+        ).value;
+
+    const subjectSelect =
+        document.getElementById(
+            "subject"
+        );
+
+    const subjectName =
+        subjectSelect.options[
+            subjectSelect.selectedIndex
+        ].text;
+
+
+    const maxMarks =
+        getMaxMarks();
+
+
+    if (!subjectId) {
+
+        showMessage(
+            "Please select a subject.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const inputs =
+        document.querySelectorAll(
+            ".marks-input"
+        );
+
+
+    const button =
+        document.getElementById(
+            "saveAllBtn"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Saving...";
+
+
+    let saved = 0;
+    let failed = 0;
+    let emailsSent = 0;
+    let emailsFailed = 0;
+
+
+    for (
+        const input of inputs
+    ) {
+
+        if (
+            input.value.trim() === ""
+        ) {
+
+            continue;
+
+        }
+
+
+        const marks =
+            parseFloat(
+                input.value
+            );
+
+
+        if (
+            isNaN(marks) ||
+            marks < 0 ||
+            marks > maxMarks
+        ) {
+
+            failed++;
+
+            continue;
+
+        }
+
+
+        const studentId =
+            parseInt(
+                input.dataset.studentId
+            );
+
+
+        try {
+
+            /* =========================================
+               SAVE MARKS TO MYSQL
+            ========================================= */
+
+            const response =
+                await fetch(
+                    MARKS_URL,
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                studentId:
+                                    studentId,
+
+                                subjectId:
+                                    parseInt(
+                                        subjectId
+                                    ),
+
+                                marks:
+                                    marks,
+
+                                examType:
+                                    examType
+
+                            })
+
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            console.log(
+                "Save result:",
+                result
+            );
+
+
+            if (
+                result.success
+            ) {
+
+                saved++;
+
+
+                /* =====================================
+                   FIND STUDENT
+                ===================================== */
+
+                const student =
+                    students.find(
+                        function(item) {
+
+                            const id =
+                                item.id ||
+                                item.student_id ||
+                                item.studentId;
+
+                            return (
+                                Number(id) ===
+                                Number(studentId)
+                            );
+
+                        }
+                    );
+
+
+                /* =====================================
+                   SEND EMAIL AFTER MYSQL SAVE
+                ===================================== */
+
+                if (student) {
+                    console.log("STUDENT FOR EMAIL:", student);
+
+                    const emailSent =
+                        await sendMarksEmail(
+                            student,
+                            subjectName,
+                            marks
+                        );
+
+
+                    if (emailSent) {
+
+                        emailsSent++;
+
+                    }
+                    else {
+
+                        emailsFailed++;
+
+                    }
+
+                }
+                else {
+
+                    emailsFailed++;
+
+                    console.warn(
+                        "Student not found for email:",
+                        studentId
+                    );
+
+                }
+
+            }
+            else {
+
+                failed++;
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                error
+            );
+
+            failed++;
+
+        }
+
+    }
+
+
+    /* =================================================
+       FINAL MESSAGE
+    ================================================= */
+
+    if (saved > 0) {
+
+        let finalMessage =
+            saved +
+            " student mark(s) saved successfully.";
+
+
+        if (emailsSent > 0) {
+
+            finalMessage +=
+                " " +
+                emailsSent +
+                " email notification(s) sent.";
+
+        }
+
+
+        if (emailsFailed > 0) {
+
+            finalMessage +=
+                " " +
+                emailsFailed +
+                " email(s) could not be sent.";
+
+        }
+
+
+        if (failed > 0) {
+
+            finalMessage +=
+                " " +
+                failed +
+                " mark(s) failed.";
+
+        }
+
+
+        showMessage(
+            finalMessage,
+            "success"
+        );
+
+
+        await loadSavedMarks();
+
+
+        /* =============================================
+           REDIRECT AFTER EMAIL PROCESS FINISHES
+        ============================================= */
+
+        setTimeout(
+            function() {
+
+                window.location.href =
+                    "faculty.html";
+
+            },
+            1500
+        );
+
+    }
+
+    else {
+
+        showMessage(
+            "No marks were saved.",
+            "error"
+        );
+
+    }
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "💾 Save All Marks";
+
+}
+
+
+/* =====================================================
+   LOAD SAVED MARKS
+===================================================== */
+
+async function loadSavedMarks() {
+
+    const tbody =
+        document.getElementById(
+            "savedMarksBody"
+        );
+
+    const status =
+        document.getElementById(
+            "savedStatus"
+        );
+
+    const subjectId =
+        document.getElementById(
+            "subject"
+        ).value;
+
+    const examType =
+        document.getElementById(
+            "examType"
+        ).value;
+
+
+    if (!subjectId) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty">
+
+                    Select a subject to view saved marks.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        status.textContent =
+            "Select subject";
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                MARKS_URL,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (data.success !== true) {
+
+            throw new Error(
+                data.message ||
+                "Unable to load marks"
+            );
+
+        }
+
+
+        allSavedMarks =
+            Array.isArray(data.marks)
+                ? data.marks
+                : [];
+
+
+        const filtered =
+            allSavedMarks.filter(
+                function(mark) {
+
+                    const markSubject =
+                        String(
+                            mark.subject_id ??
+                            mark.subjectId ??
+                            ""
+                        );
+
+                    const markExam =
+                        String(
+                            mark.exam_type ??
+                            mark.examType ??
+                            ""
+                        );
+
+                    return (
+                        markSubject ===
+                        String(subjectId)
+                        &&
+                        markExam ===
+                        String(examType)
+                    );
+
+                }
+            );
+
+
+        tbody.innerHTML = "";
+
+
+        if (filtered.length === 0) {
+
+            tbody.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="empty">
+
+                        No saved marks for this subject.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            status.textContent =
+                "0 saved marks";
+
+            return;
+
+        }
+
+
+        filtered.forEach(
+            function(mark, index) {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            mark.student_name ||
+                            mark.studentName ||
+                            ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            mark.subject_name ||
+                            mark.subjectName ||
+                            ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            mark.exam_type ||
+                            mark.examType ||
+                            ""
+                        )}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${escapeHtml(
+                                mark.marks
+                            )}
+                        </strong>
+                    </td>
+
+                `;
+
+
+                tbody.appendChild(row);
+
+            }
+        );
+
+
+        status.textContent =
+            filtered.length +
+            " saved mark" +
+            (
+                filtered.length === 1
+                    ? ""
+                    : "s"
+            );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Saved marks error:",
+            error
+        );
+
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty">
+
+                    Unable to load saved marks.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   SUBJECT CHANGE
+===================================================== */
+
+document
+    .getElementById("subject")
+    .addEventListener(
+        "change",
+        function() {
+
+            loadSavedMarks();
+
+        }
+    );
+
+
+/* =====================================================
+   EXAMINATION CHANGE
+===================================================== */
+
+document
+    .getElementById("examType")
+    .addEventListener(
+        "change",
+        function() {
+
+            displayStudents();
+
+            loadSavedMarks();
+
+        }
+    );
+
+
+/* =====================================================
+   BRANCH CHANGE
+===================================================== */
+
+document
+    .getElementById("branch")
+    .addEventListener(
+        "change",
+        function() {
+
+            displayStudents();
+
+        }
+    );
+
+
+/* =====================================================
+   SECTION CHANGE
+===================================================== */
+
+document
+    .getElementById("section")
+    .addEventListener(
+        "change",
+        function() {
+
+            displayStudents();
+
+        }
+    );
+
+
+/* =====================================================
+   MESSAGE
+===================================================== */
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message " +
+        type;
+
+    message.style.display =
+        "block";
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+    }
+
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   PAGE LOAD
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        loadSubjects();
+
+        loadStudents();
+
+    }
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System - Login</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background: #eef5fc;
+            color: #073b78;
+        }
+
+        .navbar {
+            height: 65px;
+            background: linear-gradient(90deg, #063b78, #0758a8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 45px;
+            color: white;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .page {
+            min-height: calc(100vh - 65px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 35px 20px;
+        }
+
+        .page::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #d8eaff;
+            border-radius: 50%;
+            right: -120px;
+            top: 40px;
+        }
+
+        .page::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            background: #dceeff;
+            border-radius: 50%;
+            left: -120px;
+            bottom: -100px;
+        }
+
+        .login-card {
+            width: 420px;
+            background: white;
+            border-radius: 10px;
+            padding: 35px 38px 28px;
+            box-shadow: 0 10px 35px rgba(20, 70, 120, 0.13);
+            position: relative;
+            z-index: 2;
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .heading-icon {
+            font-size: 38px;
+            margin-bottom: 7px;
+        }
+
+        .heading h1 {
+            font-size: 23px;
+            color: #073b78;
+            margin-bottom: 6px;
+        }
+
+        .heading p {
+            color: #7187a0;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 17px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #173f70;
+            margin-bottom: 7px;
+        }
+
+        .input-box {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15px;
+            z-index: 1;
+        }
+
+        input {
+            width: 100%;
+            height: 43px;
+            border: 1px solid #c8d9eb;
+            border-radius: 6px;
+            padding: 0 42px;
+            font-size: 13px;
+            color: #294968;
+            outline: none;
+            background: white;
+        }
+
+        input:focus {
+            border-color: #1675dc;
+            box-shadow: 0 0 0 2px rgba(22, 117, 220, 0.08);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 43px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #0879e8, #1164c4);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #076fd5, #0d58ae);
+        }
+
+        .register-text {
+            text-align: center;
+            margin-top: 17px;
+            font-size: 11px;
+            color: #7187a0;
+        }
+
+        .register-text a {
+            color: #176dde;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .role-title {
+            text-align: center;
+            color: #7187a0;
+            font-size: 11px;
+            margin-top: 22px;
+            margin-bottom: 10px;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .role-btn {
+            flex: 1;
+            height: 58px;
+            border: 1px solid #d6e3ef;
+            border-radius: 7px;
+            background: white;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            color: #244d78;
+        }
+
+        .role-btn span {
+            display: block;
+            font-size: 19px;
+            margin-bottom: 4px;
+        }
+
+        .role-btn.student:hover {
+            border-color: #29a66f;
+            background: #f0fff8;
+        }
+
+        .role-btn.faculty:hover {
+            border-color: #7057d9;
+            background: #f7f4ff;
+        }
+
+        .role-btn.admin:hover {
+            border-color: #ef9b3d;
+            background: #fff8ef;
+        }
+
+        .message {
+            display: none;
+            padding: 9px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 0 18px;
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 420px;
+                padding: 30px 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <div class="logo-icon">🎓</div>
+        <span>Smart Attendance System</span>
+    </div>
+
+    <nav class="nav-links">
+        <a href="home.html">Home</a>
+        <a href="register.html">Register</a>
+    </nav>
+
+</header>
+
+
+<main class="page">
+
+    <div class="login-card">
+
+        <div class="heading">
+            <div class="heading-icon">🎓</div>
+            <h1>Login to Your Account</h1>
+            <p>Welcome back! Please login to continue.</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form action="LoginServlet" method="POST">
+
+            <div class="form-group">
+
+                <label for="username">Gmail / Email</label>
+
+                <div class="input-box">
+                    <span class="input-icon">👤</span>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your email"
+                        required>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="password">Password</label>
+
+                <div class="input-box">
+
+                    <span class="input-icon">🔒</span>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required>
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        onclick="togglePassword()">
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button type="submit" class="login-btn">
+                Login
+            </button>
+
+        </form>
+
+
+        <div class="register-text">
+            Don't have an account?
+            <a href="register.html">Register</a>
+        </div>
+
+
+        <div class="role-title">
+            Login as
+        </div>
+
+
+        <div class="role-buttons">
+
+            <button
+                type="button"
+                class="role-btn student"
+                onclick="selectRole('STUDENT')">
+                <span>🟢</span>
+                Student
+            </button>
+
+            <button
+                type="button"
+                class="role-btn faculty"
+                onclick="selectRole('FACULTY')">
+                <span>🟣</span>
+                Faculty
+            </button>
+
+            <button
+                type="button"
+                class="role-btn admin"
+                onclick="selectRole('ADMIN')">
+                <span>🟠</span>
+                Admin
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script>
+
+    function togglePassword() {
+
+        const password = document.getElementById("password");
+
+        if (password.type === "password") {
+            password.type = "text";
+        } else {
+            password.type = "password";
+        }
+    }
+
+
+    function selectRole(role) {
+
+        const roleInput = document.getElementById("role");
+
+        if (roleInput) {
+            roleInput.value = role;
+        }
+
+        const username = document.getElementById("username");
+
+        if (!username.value.trim()) {
+            username.focus();
+            return;
+        }
+
+        document.querySelector("form").submit();
+    }
+
+</script>
+
+</body>
+</html>

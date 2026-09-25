@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Attendance - Faculty Dashboard</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #eef5fc;
+            color: #173f70;
+        }
+
+        .navbar {
+            height: 68px;
+            background: linear-gradient(90deg, #063b78, #0758a8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 45px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .welcome {
+            font-size: 13px;
+        }
+
+        .logout {
+            padding: 9px 17px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 5px;
+            background: transparent;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .logout:hover {
+            background: white;
+            color: #0758a8;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 38px 25px;
+        }
+
+        .title {
+            margin-bottom: 28px;
+        }
+
+        .title h1 {
+            color: #063b78;
+            font-size: 30px;
+            margin-bottom: 7px;
+        }
+
+        .title p {
+            color: #6b84a0;
+            font-size: 14px;
+        }
+
+        .faculty-info {
+            background: white;
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 0 7px 25px rgba(20, 70, 120, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 17px;
+        }
+
+        .faculty-icon {
+            width: 58px;
+            height: 58px;
+            background: #eee9ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .faculty-info h2 {
+            color: #073b78;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .faculty-info p {
+            color: #7187a0;
+            font-size: 13px;
+        }
+
+        /* TODAY'S ATTENDANCE */
+
+        .attendance-status {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: 0 7px 25px rgba(20, 70, 120, 0.08);
+        }
+
+        .attendance-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .attendance-header h2 {
+            color: #073b78;
+            font-size: 18px;
+        }
+
+        .attendance-date {
+            font-size: 12px;
+            color: #7187a0;
+        }
+
+        .status-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .status-item {
+            min-width: 180px;
+            background: #f5f9ff;
+            border: 1px solid #dbe9f8;
+            border-radius: 9px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .branch-section {
+            color: #173f70;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .attendance-counts {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .count-badge {
+            padding: 6px 10px;
+            border-radius: 18px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .present-badge {
+            color: #138a4b;
+            background: #e8f8ef;
+        }
+
+        .absent-badge {
+            color: #c43d3d;
+            background: #fff0f0;
+        }
+
+        .no-attendance {
+            color: #7187a0;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
+        /* THREE CARDS */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px 25px;
+            box-shadow: 0 7px 25px rgba(20, 70, 120, 0.08);
+            min-height: 275px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(7, 88, 168, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(20, 70, 120, 0.13);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: #e5f1ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+            margin-bottom: 18px;
+        }
+
+        .card h2 {
+            color: #073b78;
+            font-size: 20px;
+            margin-bottom: 9px;
+        }
+
+        .card p {
+            color: #7187a0;
+            font-size: 13px;
+            line-height: 1.7;
+            flex: 1;
+        }
+
+        .card-btn {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            background: #0872dc;
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 22px;
+            transition: background 0.2s ease;
+        }
+
+        .card-btn:hover {
+            background: #075db5;
+        }
+
+        /* NOTIFICATION */
+
+        .notification {
+            margin-top: 25px;
+            background: white;
+            border-radius: 9px;
+            padding: 18px 20px;
+            box-shadow: 0 7px 25px rgba(20, 70, 120, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .notification-icon {
+            font-size: 25px;
+        }
+
+        .notification h3 {
+            color: #073b78;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification p {
+            color: #7187a0;
+            font-size: 11px;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                min-height: 230px;
+            }
+
+            .status-list {
+                flex-direction: column;
+            }
+
+            .status-item {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 0 18px;
+            }
+
+            .welcome {
+                display: none;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+
+            .title h1 {
+                font-size: 25px;
+            }
+
+            .attendance-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <div class="logo-icon">🎓</div>
+        <span>Smart Attendance System</span>
+    </div>
+
+    <div class="nav-right">
+
+        <span class="welcome" id="welcomeText">
+            Faculty Dashboard
+        </span>
+
+        <button class="logout" onclick="logout()">
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <!-- TITLE -->
+
+    <div class="title">
+
+        <h1>Faculty Dashboard</h1>
+
+        <p>
+            Manage attendance, marks and student information.
+        </p>
+
+    </div>
+
+
+    <!-- FACULTY INFORMATION -->
+
+    <div class="faculty-info">
+
+        <div class="faculty-icon">
+            👨‍🏫
+        </div>
+
+        <div>
+
+            <h2 id="facultyName">
+                Faculty
+            </h2>
+
+            <p>
+                Welcome to your Smart Attendance dashboard
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- TODAY'S ATTENDANCE -->
+
+    <div class="attendance-status">
+
+        <div class="attendance-header">
+
+            <h2>
+                Today's Attendance
+            </h2>
+
+            <span class="attendance-date" id="todayDate">
+            </span>
+
+        </div>
+
+        <div class="status-list" id="statusList">
+
+            <div class="no-attendance">
+                Loading attendance...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- THREE CARDS -->
+
+    <div class="cards">
+
+        <!-- ATTENDANCE -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                📋
+            </div>
+
+            <h2>
+                Attendance
+            </h2>
+
+            <p>
+                Mark student attendance and manage
+                daily attendance records for each
+                subject, branch and section.
+            </p>
+
+            <a href="attendance.html" class="card-btn">
+                Manage Attendance
+            </a>
+
+        </div>
+
+
+        <!-- MARKS -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                📊
+            </div>
+
+            <h2>
+                Marks
+            </h2>
+
+            <p>
+                Enter and manage student marks for
+                different subjects and examinations.
+            </p>
+
+            <a href="marks.html" class="card-btn">
+                Manage Marks
+            </a>
+
+        </div>
+
+
+        <!-- STUDENTS REPORT -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                👨‍🎓
+            </div>
+
+            <h2>
+                Students Report
+            </h2>
+
+            <p>
+                View registered students, attendance
+                details and students below the required
+                attendance percentage.
+            </p>
+
+            <a href="students.html" class="card-btn">
+                View Students
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- NOTIFICATION -->
+
+    <div class="notification">
+
+        <div class="notification-icon">
+            🔔
+        </div>
+
+        <div>
+
+            <h3>
+                Faculty Notifications
+            </h3>
+
+            <p>
+                Attendance reminders and important
+                academic updates will appear here.
+            </p>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script>
+
+    function logout() {
+        window.location.href = "login.html";
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const name =
+            sessionStorage.getItem("facultyName");
+
+        if (name) {
+
+            document.getElementById("facultyName")
+                .textContent = name;
+
+            document.getElementById("welcomeText")
+                .textContent = "Welcome, " + name;
+        }
+
+        showTodayDate();
+
+        loadTodayAttendance();
+
+    });
+
+
+    function showTodayDate() {
+
+        const today = new Date();
+
+        const formatted =
+            today.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+
+        document.getElementById("todayDate")
+            .textContent = formatted;
+    }
+
+
+    function loadTodayAttendance() {
+
+        const statusList =
+            document.getElementById("statusList");
+
+        fetch("AttendanceServlet?type=records")
+
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to load attendance"
+                    );
+                }
+
+                return response.json();
+            })
+
+            .then(records => {
+
+                const today = new Date();
+
+                const todayISO =
+                    today.getFullYear() +
+                    "-" +
+                    String(today.getMonth() + 1)
+                        .padStart(2, "0") +
+                    "-" +
+                    String(today.getDate())
+                        .padStart(2, "0");
+
+
+                const todayRecords =
+                    records.filter(record => {
+
+                        if (!record.attendanceDate) {
+                            return false;
+                        }
+
+                        const recordDate =
+                            String(record.attendanceDate)
+                                .substring(0, 10);
+
+                        return recordDate === todayISO;
+                    });
+
+
+                /*
+                 * IMPORTANT:
+                 * Subject + Branch + Section
+                 * are used as the unique group.
+                 *
+                 * So:
+                 *
+                 * Java Programming + IT + A
+                 *
+                 * and
+                 *
+                 * DBMS + IT + A
+                 *
+                 * will be displayed separately.
+                 */
+
+                const combinations = new Map();
+
+
+                todayRecords.forEach(record => {
+
+                    const subject =
+                        String(
+                            record.subjectName || ""
+                        )
+                        .trim()
+                        .toUpperCase();
+
+                    const branch =
+                        String(
+                            record.department ||
+                            record.branch ||
+                            ""
+                        )
+                        .trim()
+                        .toUpperCase();
+
+                    const section =
+                        String(
+                            record.section || ""
+                        )
+                        .trim()
+                        .toUpperCase();
+
+
+                    if (subject && branch && section) {
+
+                        const key =
+                            subject +
+                            "||" +
+                            branch +
+                            "||" +
+                            section;
+
+                        if (!combinations.has(key)) {
+
+                            combinations.set(
+                                key,
+                                {
+                                    subject: subject,
+                                    branch: branch,
+                                    section: section,
+                                    records: []
+                                }
+                            );
+
+                        }
+
+                        combinations
+                            .get(key)
+                            .records
+                            .push(record);
+                    }
+
+                });
+
+
+                statusList.innerHTML = "";
+
+
+                if (combinations.size === 0) {
+
+                    statusList.innerHTML = `
+                        <div class="no-attendance">
+                            No attendance marked today.
+                        </div>
+                    `;
+
+                    return;
+                }
+
+
+                Array.from(combinations.values())
+
+                    .sort((a, b) => {
+
+                        const first =
+                            a.subject +
+                            a.branch +
+                            a.section;
+
+                        const second =
+                            b.subject +
+                            b.branch +
+                            b.section;
+
+                        return first.localeCompare(second);
+                    })
+
+                    .forEach(group => {
+
+                        let presentCount = 0;
+
+                        let totalCount = 0;
+
+
+                        /*
+                         * Calculate attendance only
+                         * for this subject + branch + section.
+                         */
+
+                        group.records.forEach(record => {
+
+                            const total =
+                                Number(
+                                    record.totalClasses ??
+                                    record.total_classes ??
+                                    record.total ??
+                                    1
+                                );
+
+                            const attended =
+                                Number(
+                                    record.attendedClasses ??
+                                    record.attended_classes ??
+                                    record.attended ??
+                                    0
+                                );
+
+
+                            if (
+                                Number.isFinite(total) &&
+                                total > 0
+                            ) {
+
+                                totalCount += total;
+
+                            }
+
+
+                            if (
+                                Number.isFinite(attended) &&
+                                attended > 0
+                            ) {
+
+                                presentCount +=
+                                    Math.min(
+                                        attended,
+                                        total > 0
+                                            ? total
+                                            : attended
+                                    );
+
+                            }
+
+                        });
+
+
+                        const absentCount =
+                            Math.max(
+                                totalCount -
+                                presentCount,
+                                0
+                            );
+
+
+                        const item =
+                            document.createElement("div");
+
+                        item.className =
+                            "status-item";
+
+
+                        item.innerHTML = `
+
+                            <span class="branch-section">
+
+                                ${escapeHTML(group.subject)}
+                                -
+                                ${escapeHTML(group.branch)}
+                                -
+                                ${escapeHTML(group.section)}
+
+                            </span>
+
+
+                            <span class="attendance-counts">
+
+                                <span class="count-badge present-badge">
+
+                                    Present ${presentCount}
+
+                                </span>
+
+
+                                <span class="count-badge absent-badge">
+
+                                    Absent ${absentCount}
+
+                                </span>
+
+                            </span>
+
+                        `;
+
+
+                        statusList.appendChild(item);
+
+                    });
+
+            })
+
+            .catch(error => {
+
+                console.error(error);
+
+                statusList.innerHTML = `
+
+                    <div class="no-attendance">
+
+                        Unable to load attendance records.
+
+                    </div>
+
+                `;
+
+            });
+
+    }
+
+
+    function escapeHTML(value) {
+
+        return String(value)
+
+            .replace(/&/g, "&amp;")
+
+            .replace(/</g, "&lt;")
+
+            .replace(/>/g, "&gt;")
+
+            .replace(/"/g, "&quot;")
+
+            .replace(/'/g, "&#039;");
+
+    }
+
+</script>
+
+</body>
+
+</html>
