@@ -25,33 +25,35 @@ public class RegisterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_HOST = getEnv("DB_HOST", "localhost");
-private static final String DB_PORT = getEnv("DB_PORT", "3306");
-private static final String DB_NAME = getEnv("DB_NAME", "smartattendance");
-private static final String DB_USER = getEnv("DB_USER", "root");
-private static final String DB_PASSWORD = getEnv("DB_PASSWORD", "");
-
-private static String getEnv(String key, String defaultValue) {
-    String value = System.getenv(key);
-    return (value == null || value.trim().isEmpty()) ? defaultValue : value;
-}
-private static final String DB_URL =
-        "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
-        + "?sslMode=REQUIRED"
-        + "&allowPublicKeyRetrieval=true"
-        + "&serverTimezone=UTC";
-    // ==============================
+    // =========================================================
     // GMAIL SETTINGS
-    // ==============================
+    // =========================================================
 
     private static final String SENDER_EMAIL =
-        "kusumanjaligadupudi@gmail.com";
+            "kusumanjaligadupudi@gmail.com";
 
-// Gmail 16-character App Password
-// Set this in Windows as SMART_ATTENDANCE_GMAIL_APP_PASSWORD.
-// Do NOT hard-code the password in this source file.
-private static final String APP_PASSWORD =
-        System.getenv("SMART_ATTENDANCE_GMAIL_APP_PASSWORD");
+    private static final String APP_PASSWORD =
+            System.getenv("SMART_ATTENDANCE_GMAIL_APP_PASSWORD");
+
+    // =========================================================
+    // GET REQUIRED ENVIRONMENT VARIABLE
+    // =========================================================
+
+    private String getRequiredEnv(String key) {
+
+        String value = System.getenv(key);
+
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    // =========================================================
+    // POST
+    // =========================================================
+
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -59,6 +61,20 @@ private static final String APP_PASSWORD =
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+
+        // =====================================================
+        // DATABASE ENVIRONMENT VARIABLES
+        // =====================================================
+
+        String dbHost = getRequiredEnv("DB_HOST");
+        String dbPort = getRequiredEnv("DB_PORT");
+        String dbName = getRequiredEnv("DB_NAME");
+        String dbUser = getRequiredEnv("DB_USER");
+        String dbPassword = getRequiredEnv("DB_PASSWORD");
+
+        // =====================================================
+        // FORM VALUES
+        // =====================================================
 
         String name = request.getParameter("name");
         String email = request.getParameter("email");
@@ -70,9 +86,9 @@ private static final String APP_PASSWORD =
         String section = request.getParameter("section");
         String yearValue = request.getParameter("year");
 
-        // ==============================
+        // =====================================================
         // BASIC VALIDATION
-        // ==============================
+        // =====================================================
 
         if (name == null
                 || email == null
@@ -92,9 +108,9 @@ private static final String APP_PASSWORD =
         password = password.trim();
         role = role.trim().toUpperCase();
 
-        // ==============================
+        // =====================================================
         // ROLE VALIDATION
-        // ==============================
+        // =====================================================
 
         if (!role.equals("STUDENT")
                 && !role.equals("FACULTY")
@@ -104,9 +120,9 @@ private static final String APP_PASSWORD =
             return;
         }
 
-        // ==============================
+        // =====================================================
         // STUDENT DETAILS
-        // ==============================
+        // =====================================================
 
         int year = 1;
 
@@ -136,17 +152,27 @@ private static final String APP_PASSWORD =
 
                 } catch (NumberFormatException e) {
 
-                    response.sendRedirect("register.html?error=invalidyear");
+                    response.sendRedirect(
+                            "register.html?error=invalidyear"
+                    );
+
                     return;
                 }
 
                 if (year < 1 || year > 4) {
 
-                    response.sendRedirect("register.html?error=invalidyear");
+                    response.sendRedirect(
+                            "register.html?error=invalidyear"
+                    );
+
                     return;
                 }
             }
         }
+
+        // =====================================================
+        // DATABASE CONNECTION URL
+        // =====================================================
 
         Connection con = null;
         PreparedStatement insertUser = null;
@@ -155,27 +181,77 @@ private static final String APP_PASSWORD =
 
         try {
 
-            // ==============================
+            // =================================================
+            // CHECK RENDER DATABASE VARIABLES
+            // =================================================
+
+            if (dbHost == null
+                    || dbPort == null
+                    || dbName == null
+                    || dbUser == null
+                    || dbPassword == null) {
+
+                throw new ServletException(
+                        "Database environment variables are missing. "
+                        + "Check DB_HOST, DB_PORT, DB_NAME, DB_USER "
+                        + "and DB_PASSWORD in Render."
+                );
+            }
+
+            // =================================================
+            // BUILD DATABASE URL
+            // =================================================
+
+            String dbUrl =
+                    "jdbc:mysql://"
+                    + dbHost
+                    + ":"
+                    + dbPort
+                    + "/"
+                    + dbName
+                    + "?sslMode=REQUIRED"
+                    + "&allowPublicKeyRetrieval=true"
+                    + "&serverTimezone=UTC"
+                    + "&connectTimeout=15000"
+                    + "&socketTimeout=30000";
+
+            // =================================================
+            // SAFE LOG
+            // =================================================
+
+            System.out.println("====================================");
+            System.out.println("DATABASE CONNECTION START");
+            System.out.println("DB HOST : " + dbHost);
+            System.out.println("DB PORT : " + dbPort);
+            System.out.println("DB NAME : " + dbName);
+            System.out.println("DB USER : " + dbUser);
+            System.out.println("====================================");
+
+            // =================================================
             // MYSQL DRIVER
-            // ==============================
+            // =================================================
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // ==============================
-            // DATABASE CONNECTION
-            // ==============================
+            // =================================================
+            // CONNECT
+            // =================================================
 
             con = DriverManager.getConnection(
-                    DB_URL,
-                    DB_USER,
-                    DB_PASSWORD
+                    dbUrl,
+                    dbUser,
+                    dbPassword
+            );
+
+            System.out.println(
+                    "DATABASE CONNECTION SUCCESS"
             );
 
             con.setAutoCommit(false);
 
-            // ==============================
+            // =================================================
             // INSERT USER
-            // ==============================
+            // =================================================
 
             String insertUserSQL =
                     "INSERT INTO users "
@@ -192,39 +268,49 @@ private static final String APP_PASSWORD =
             insertUser.setString(3, password);
             insertUser.setString(4, role);
 
-            int userCount = insertUser.executeUpdate();
+            int userCount =
+                    insertUser.executeUpdate();
 
             if (userCount != 1) {
 
                 con.rollback();
 
-                response.sendRedirect("register.html?error=failed");
+                response.sendRedirect(
+                        "register.html?error=failed"
+                );
+
                 return;
             }
 
-            // ==============================
+            // =================================================
             // GET USER ID
-            // ==============================
+            // =================================================
 
-            generatedKeys = insertUser.getGeneratedKeys();
+            generatedKeys =
+                    insertUser.getGeneratedKeys();
 
             int userId = 0;
 
             if (generatedKeys.next()) {
-                userId = generatedKeys.getInt(1);
+
+                userId =
+                        generatedKeys.getInt(1);
             }
 
             if (userId <= 0) {
 
                 con.rollback();
 
-                response.sendRedirect("register.html?error=failed");
+                response.sendRedirect(
+                        "register.html?error=failed"
+                );
+
                 return;
             }
 
-            // ==============================
-            // INSERT STUDENT DETAILS
-            // ==============================
+            // =================================================
+            // INSERT STUDENT
+            // =================================================
 
             if ("STUDENT".equals(role)) {
 
@@ -234,14 +320,38 @@ private static final String APP_PASSWORD =
                         + "department, section, year) "
                         + "VALUES (?, ?, ?, ?, ?, ?)";
 
-                insertStudent = con.prepareStatement(studentSQL);
+                insertStudent =
+                        con.prepareStatement(studentSQL);
 
-                insertStudent.setString(1, name);
-                insertStudent.setString(2, rollNumber);
-                insertStudent.setString(3, email);
-                insertStudent.setString(4, department);
-                insertStudent.setString(5, section);
-                insertStudent.setInt(6, year);
+                insertStudent.setString(
+                        1,
+                        name
+                );
+
+                insertStudent.setString(
+                        2,
+                        rollNumber
+                );
+
+                insertStudent.setString(
+                        3,
+                        email
+                );
+
+                insertStudent.setString(
+                        4,
+                        department
+                );
+
+                insertStudent.setString(
+                        5,
+                        section
+                );
+
+                insertStudent.setInt(
+                        6,
+                        year
+                );
 
                 int studentCount =
                         insertStudent.executeUpdate();
@@ -250,14 +360,17 @@ private static final String APP_PASSWORD =
 
                     con.rollback();
 
-                    response.sendRedirect("register.html?error=failed");
+                    response.sendRedirect(
+                            "register.html?error=failed"
+                    );
+
                     return;
                 }
             }
 
-            // ==============================
+            // =================================================
             // COMMIT
-            // ==============================
+            // =================================================
 
             con.commit();
 
@@ -269,9 +382,9 @@ private static final String APP_PASSWORD =
             System.out.println("Role    : " + role);
             System.out.println("====================================");
 
-            // ==============================
-            // SEND WELCOME EMAIL
-            // ==============================
+            // =================================================
+            // WELCOME EMAIL
+            // =================================================
 
             if ("STUDENT".equals(role)
                     || "FACULTY".equals(role)) {
@@ -283,39 +396,71 @@ private static final String APP_PASSWORD =
                 );
             }
 
-            // ==============================
+            // =================================================
             // SESSION
-            // ==============================
+            // =================================================
 
             HttpSession session =
                     request.getSession(true);
 
-            session.setAttribute("userId", userId);
-            session.setAttribute("name", name);
-            session.setAttribute("email", email);
-            session.setAttribute("username", email);
-            session.setAttribute("role", role);
-            session.setAttribute("passwordVerified", true);
+            session.setAttribute(
+                    "userId",
+                    userId
+            );
 
-            // ==============================
-            // DASHBOARD
-            // ==============================
+            session.setAttribute(
+                    "name",
+                    name
+            );
+
+            session.setAttribute(
+                    "email",
+                    email
+            );
+
+            session.setAttribute(
+                    "username",
+                    email
+            );
+
+            session.setAttribute(
+                    "role",
+                    role
+            );
+
+            session.setAttribute(
+                    "passwordVerified",
+                    true
+            );
+
+            // =================================================
+            // ROLE DASHBOARD
+            // =================================================
 
             if ("STUDENT".equals(role)) {
 
-                response.sendRedirect("student.html");
+                response.sendRedirect(
+                        "student.html"
+                );
+
                 return;
             }
 
             if ("FACULTY".equals(role)) {
 
-                response.sendRedirect("faculty.html");
+                response.sendRedirect(
+                        "faculty.html"
+                );
+
                 return;
             }
 
             if ("ADMIN".equals(role)) {
 
-                response.sendRedirect("admin.html");
+                response.sendRedirect(
+                        "admin.html"
+                );
+
                 return;
             }
 
@@ -333,54 +478,111 @@ private static final String APP_PASSWORD =
                 }
             }
 
-            System.out.println("========== REGISTER ERROR ==========");
-            System.out.println(e.getClass().getName());
-            System.out.println(e.getMessage());
-            System.out.println("====================================");
+            System.out.println(
+                    "========== REGISTER ERROR =========="
+            );
 
-            response.setContentType("text/html;charset=UTF-8");
+            System.out.println(
+                    "ERROR TYPE : "
+                    + e.getClass().getName()
+            );
 
-            response.getWriter().println("<h2>Registration Error</h2>");
-            response.getWriter().println("<pre>");
-            response.getWriter().println(e.getClass().getName());
-            response.getWriter().println(": " + e.getMessage());
-            response.getWriter().println("</pre>");
+            System.out.println(
+                    "ERROR MSG  : "
+                    + e.getMessage()
+            );
+
+            System.out.println(
+                    "DB HOST    : "
+                    + dbHost
+            );
+
+            System.out.println(
+                    "DB PORT    : "
+                    + dbPort
+            );
+
+            System.out.println(
+                    "DB NAME    : "
+                    + dbName
+            );
+
+            System.out.println(
+                    "DB USER    : "
+                    + dbUser
+            );
+
+            System.out.println(
+                    "===================================="
+            );
+
+            response.setContentType(
+                    "text/html;charset=UTF-8"
+            );
+
+            response.getWriter().println(
+                    "<h2>Registration Error</h2>"
+            );
+
+            response.getWriter().println(
+                    "<pre>"
+            );
+
+            response.getWriter().println(
+                    e.getClass().getName()
+            );
+
+            response.getWriter().println(
+                    ": " + e.getMessage()
+            );
+
+            response.getWriter().println(
+                    "</pre>"
+            );
 
         } finally {
 
             try {
+
                 if (generatedKeys != null) {
                     generatedKeys.close();
                 }
+
             } catch (Exception ignored) {
             }
 
             try {
+
                 if (insertStudent != null) {
                     insertStudent.close();
                 }
+
             } catch (Exception ignored) {
             }
 
             try {
+
                 if (insertUser != null) {
                     insertUser.close();
                 }
+
             } catch (Exception ignored) {
             }
 
             try {
+
                 if (con != null) {
                     con.close();
                 }
+
             } catch (Exception ignored) {
             }
         }
     }
 
-    // ==============================
+    // =========================================================
     // WELCOME EMAIL
-    // ==============================
+    // =========================================================
 
     private void sendWelcomeEmail(
             String email,
@@ -389,13 +591,17 @@ private static final String APP_PASSWORD =
 
         try {
 
-            if (APP_PASSWORD == null || APP_PASSWORD.trim().isEmpty()) {
+            if (APP_PASSWORD == null
+                    || APP_PASSWORD.trim().isEmpty()) {
+
                 throw new IllegalStateException(
-                        "SMART_ATTENDANCE_GMAIL_APP_PASSWORD is not set"
+                        "SMART_ATTENDANCE_GMAIL_APP_PASSWORD "
+                        + "is not set"
                 );
             }
 
-            Properties props = new Properties();
+            Properties props =
+                    new Properties();
 
             props.put(
                     "mail.smtp.auth",
@@ -469,13 +675,20 @@ private static final String APP_PASSWORD =
             Transport.send(message);
 
             System.out.println(
-                    "WELCOME EMAIL SENT TO: " + email
+                    "WELCOME EMAIL SENT TO: "
+                    + email
             );
 
         } catch (Exception e) {
 
-            System.out.println("WELCOME EMAIL FAILED");
-            System.out.println("Reason: " + e.getMessage());
+            System.out.println(
+                    "WELCOME EMAIL FAILED"
+            );
+
+            System.out.println(
+                    "Reason: "
+                    + e.getMessage()
+            );
 
             e.printStackTrace();
         }
