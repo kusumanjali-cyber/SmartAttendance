@@ -20,34 +20,31 @@ public class RegisterServlet extends HttpServlet {
     private static final String DB_HOST =
         getEnv("DB_HOST", "localhost");
 
-private static final String DB_PORT =
+    private static final String DB_PORT =
         getEnv("DB_PORT", "3306");
 
-private static final String DB_NAME =
+    private static final String DB_NAME =
         getEnv("DB_NAME", "smartattendance");
 
-private static final String DB_USER =
+    private static final String DB_USER =
         getEnv("DB_USER", "root");
 
-private static final String DB_PASSWORD =
+    private static final String DB_PASSWORD =
         getEnv("DB_PASSWORD", "");
 
-private static final String DB_URL =
+    private static final String DB_URL =
         "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
-        + "?sslMode="
-        + (DB_HOST.equals("localhost") ? "DISABLED" : "REQUIRED")
-        + "&allowPublicKeyRetrieval=true"
-        + "&serverTimezone=UTC";
+        + "?ssl-mode=REQUIRED";
 
-private static String getEnv(String name, String defaultValue) {
-    String value = System.getenv(name);
+    private static String getEnv(String name, String defaultValue) {
+        String value = System.getenv(name);
 
-    if (value == null || value.trim().isEmpty()) {
-        return defaultValue;
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        return value.trim();
     }
-
-    return value.trim();
-}
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -152,19 +149,24 @@ private static String getEnv(String name, String defaultValue) {
                 }
             }
         }
+
+        // =====================================================
+        // FACULTY DETAILS
+        // =====================================================
+
         if ("FACULTY".equals(role)) {
 
-    if (subject == null || subject.trim().isEmpty()) {
+            if (subject == null || subject.trim().isEmpty()) {
 
-        response.sendRedirect(
-                "register.html?error=missing"
-        );
+                response.sendRedirect(
+                        "register.html?error=missing"
+                );
 
-        return;
-    }
+                return;
+            }
 
-    subject = subject.trim();
-}
+            subject = subject.trim();
+        }
 
         Connection con = null;
         PreparedStatement insertUser = null;
@@ -196,9 +198,9 @@ private static String getEnv(String name, String defaultValue) {
             // =================================================
 
             String insertUserSQL =
-        "INSERT INTO users "
-        + "(name, username, password, role, subject) "
-        + "VALUES (?, ?, ?, ?, ?)";
+                "INSERT INTO users "
+                + "(name, username, password, role, subject) "
+                + "VALUES (?, ?, ?, ?, ?)";
 
             insertUser = con.prepareStatement(
                     insertUserSQL,
@@ -210,9 +212,9 @@ private static String getEnv(String name, String defaultValue) {
             insertUser.setString(3, password);
             insertUser.setString(4, role);
             insertUser.setString(
-        5,
-        "FACULTY".equals(role) ? subject : null
-);
+                    5,
+                    "FACULTY".equals(role) ? subject : null
+            );
 
             int userCount = insertUser.executeUpdate();
 
@@ -236,7 +238,6 @@ private static String getEnv(String name, String defaultValue) {
             int userId = 0;
 
             if (generatedKeys.next()) {
-
                 userId = generatedKeys.getInt(1);
             }
 
@@ -317,27 +318,34 @@ private static String getEnv(String name, String defaultValue) {
             // =================================================
 
             con.commit();
-         // Send registration email using EmailJS
-if ("STUDENT".equals(role) || "FACULTY".equals(role)) {
 
-    boolean emailSent =
-            EmailJSService.sendRegistrationEmail(
-                    email,
-                    name,
-                    role
-            );
+            // =================================================
+            // SEND REGISTRATION EMAIL USING EMAILJS
+            // =================================================
 
-    if (emailSent) {
-        System.out.println(
-                "Registration email sent successfully."
-        );
-    } else {
-        System.out.println(
-                "Registration email failed."
-        );
-    }
-} 
+            if ("STUDENT".equals(role) ||
+                "FACULTY".equals(role)) {
 
+                boolean emailSent =
+                        EmailJSService.sendRegistrationEmail(
+                                email,
+                                name,
+                                role
+                        );
+
+                if (emailSent) {
+
+                    System.out.println(
+                            "Registration email sent successfully."
+                    );
+
+                } else {
+
+                    System.out.println(
+                            "Registration email failed."
+                    );
+                }
+            }
 
             // =================================================
             // CREATE SESSION
