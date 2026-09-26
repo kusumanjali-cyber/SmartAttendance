@@ -210,9 +210,8 @@ public class RegisterServlet extends HttpServlet {
                     + "/"
                     + dbName
                     + "?sslMode=REQUIRED"
-                    + "&allowPublicKeyRetrieval=true"
                     + "&serverTimezone=UTC"
-                    + "&connectTimeout=15000"
+                    + "&connectTimeout=30000"
                     + "&socketTimeout=30000";
 
             // =================================================
