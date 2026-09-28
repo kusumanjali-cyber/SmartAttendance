@@ -296,19 +296,14 @@
         }
     );
 
-    registerForm.submit();
-
 } catch (error) {
 
     console.log("Email error:", error);
 
-    message.innerText = "Registration email failed.";
-    message.className = "message error";
-
-    registerButton.disabled = false;
-    registerButton.innerText = "Register";
-
 }
+
+// Registration should continue even if email fails
+registerForm.submit();
 });
 
 </script>
