@@ -16,15 +16,92 @@ public class LoginServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+    // =====================================================
+    // GET ENVIRONMENT VARIABLE
+    // =====================================================
 
+    private String getEnv(String key, String fallback) {
+
+        String value = System.getenv(key);
+
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+
+        return value.trim();
+    }
+
+
+    // =====================================================
+    // DATABASE URL
+    // =====================================================
+
+    private String getDatabaseUrl() {
+
+        String configuredUrl =
+                System.getenv("DB_URL");
+
+        /*
+         * If DB_URL is already a complete JDBC URL,
+         * use it directly.
+         */
+
+        if (configuredUrl != null &&
+            configuredUrl.trim().startsWith("jdbc:mysql://")) {
+
+            return configuredUrl.trim();
+        }
+
+
+        /*
+         * Render setup:
+         *
+         * DB_URL      = database hostname
+         * DB_PORT     = database port
+         * DB_NAME     = database name
+         *
+         * Example:
+         *
+         * jdbc:mysql://hostname:21100/defaultdb
+         */
+
+        String host =
+                getEnv(
+                        "DB_HOST",
+                        configuredUrl
+                );
+
+        String port =
+                getEnv(
+                        "DB_PORT",
+                        "3306"
+                );
+
+        String database =
+                getEnv(
+                        "DB_NAME",
+                        "smartattendance"
+                );
+
+
+        return "jdbc:mysql://"
+                + host
+                + ":"
+                + port
+                + "/"
+                + database
+                + "?useSSL=true"
+                + "&requireSSL=true"
+                + "&verifyServerCertificate=false"
+                + "&allowPublicKeyRetrieval=true"
+                + "&serverTimezone=UTC";
+    }
+
+
+    // =====================================================
+    // POST LOGIN
+    // =====================================================
 
     @Override
     protected void doPost(
@@ -34,15 +111,32 @@ public class LoginServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        String email = request.getParameter("username");
-        String password = request.getParameter("password");
+
+        // =================================================
+        // FORM VALUES
+        // =================================================
+
+        String email =
+                request.getParameter("username");
+
+        String password =
+                request.getParameter("password");
+
 
         // Support email field also
-        if (email == null || email.trim().isEmpty()) {
-            email = request.getParameter("email");
+
+        if (email == null ||
+            email.trim().isEmpty()) {
+
+            email =
+                    request.getParameter("email");
         }
 
-        // Check empty fields
+
+        // =================================================
+        // CHECK EMPTY FIELDS
+        // =================================================
+
         if (email == null ||
             password == null ||
             email.trim().isEmpty() ||
@@ -55,8 +149,12 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        email = email.trim().toLowerCase();
-        password = password.trim();
+
+        email =
+                email.trim().toLowerCase();
+
+        password =
+                password.trim();
 
 
         Connection connection = null;
@@ -66,26 +164,76 @@ public class LoginServlet extends HttpServlet {
 
         try {
 
-            // Load MySQL driver
+            // =================================================
+            // DATABASE CONFIGURATION
+            // =================================================
+
+            String dbUrl =
+                    getDatabaseUrl();
+
+            String dbUser =
+                    getEnv(
+                            "DB_USER",
+                            "root"
+                    );
+
+            String dbPassword =
+                    getEnv(
+                            "DB_PASSWORD",
+                            "root123"
+                    );
+
+
+            System.out.println(
+                    "=========================================="
+            );
+
+            System.out.println(
+                    "SMARTATTEND LOGIN - DATABASE CONNECTION"
+            );
+
+            System.out.println(
+                    "DB URL  : " + dbUrl
+            );
+
+            System.out.println(
+                    "DB USER : " + dbUser
+            );
+
+            System.out.println(
+                    "=========================================="
+            );
+
+
+            // =================================================
+            // LOAD MYSQL DRIVER
+            // =================================================
+
             Class.forName(
                     "com.mysql.cj.jdbc.Driver"
             );
 
 
-            // Connect database
+            // =================================================
+            // CONNECT DATABASE
+            // =================================================
+
             connection =
                     DriverManager.getConnection(
-                            DB_URL,
-                            DB_USER,
-                            DB_PASSWORD
+                            dbUrl,
+                            dbUser,
+                            dbPassword
                     );
 
 
-            /*
-             * IMPORTANT:
-             * id is included because we use
-             * resultSet.getInt("id") below.
-             */
+            System.out.println(
+                    "LOGIN DATABASE CONNECTION SUCCESS"
+            );
+
+
+            // =================================================
+            // LOGIN QUERY
+            // =================================================
 
             String sql =
                     "SELECT id, name, username, role, subject "
@@ -113,12 +261,17 @@ public class LoginServlet extends HttpServlet {
                     statement.executeQuery();
 
 
-            // Login failed
+            // =================================================
+            // LOGIN FAILED
+            // =================================================
+
             if (!resultSet.next()) {
 
                 System.out.println(
-                        "LOGIN FAILED: " + email
+                        "LOGIN FAILED: "
+                        + email
                 );
+
 
                 response.sendRedirect(
                         "login.html?error=invalid"
@@ -128,7 +281,10 @@ public class LoginServlet extends HttpServlet {
             }
 
 
-            // Get user details
+            // =================================================
+            // GET USER DETAILS
+            // =================================================
+
             int userId =
                     resultSet.getInt("id");
 
@@ -173,12 +329,16 @@ public class LoginServlet extends HttpServlet {
                     role.trim().toUpperCase();
 
 
-            /*
-             * Login success information
-             */
+            // =================================================
+            // LOGIN SUCCESS
+            // =================================================
 
             System.out.println(
-                    "========== LOGIN SUCCESS =========="
+                    "=========================================="
+            );
+
+            System.out.println(
+                    "LOGIN SUCCESS"
             );
 
             System.out.println(
@@ -198,11 +358,14 @@ public class LoginServlet extends HttpServlet {
             );
 
             System.out.println(
-                    "==================================="
+                    "=========================================="
             );
 
 
-            // Create session
+            // =================================================
+            // CREATE SESSION
+            // =================================================
+
             HttpSession session =
                     request.getSession(true);
 
@@ -249,9 +412,9 @@ public class LoginServlet extends HttpServlet {
             );
 
 
-            // ==============================
+            // =================================================
             // ROLE BASED REDIRECT
-            // ==============================
+            // =================================================
 
             if ("STUDENT".equals(role)) {
 
@@ -283,9 +446,12 @@ public class LoginServlet extends HttpServlet {
             }
 
 
-            // Unknown role
+            // =================================================
+            // UNKNOWN ROLE
+            // =================================================
 
             session.invalidate();
+
 
             response.sendRedirect(
                     "login.html?error=invalidrole"
@@ -294,15 +460,34 @@ public class LoginServlet extends HttpServlet {
 
         } catch (Exception e) {
 
+            // =================================================
+            // LOGIN ERROR
+            // =================================================
+
             System.out.println(
-                    "========== LOGIN ERROR =========="
+                    "=========================================="
             );
+
+            System.out.println(
+                    "LOGIN DATABASE ERROR"
+            );
+
+            System.out.println(
+                    "ERROR TYPE: "
+                    + e.getClass().getName()
+            );
+
+            System.out.println(
+                    "ERROR MESSAGE: "
+                    + e.getMessage()
+            );
+
+            System.out.println(
+                    "=========================================="
+            );
+
 
             e.printStackTrace();
-
-            System.out.println(
-                    "================================="
-            );
 
 
             response.sendRedirect(
@@ -311,6 +496,11 @@ public class LoginServlet extends HttpServlet {
 
 
         } finally {
+
+
+            // =================================================
+            // CLOSE RESULT SET
+            // =================================================
 
             try {
 
@@ -322,6 +512,10 @@ public class LoginServlet extends HttpServlet {
             }
 
 
+            // =================================================
+            // CLOSE STATEMENT
+            // =================================================
+
             try {
 
                 if (statement != null) {
@@ -331,6 +525,10 @@ public class LoginServlet extends HttpServlet {
             } catch (Exception ignored) {
             }
 
+
+            // =================================================
+            // CLOSE CONNECTION
+            // =================================================
 
             try {
 
@@ -343,6 +541,10 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
+
+    // =====================================================
+    // GET
+    // =====================================================
 
     @Override
     protected void doGet(

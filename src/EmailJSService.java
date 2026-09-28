@@ -10,18 +10,60 @@ public class EmailJSService {
     private static final String API_URL =
             "https://api.emailjs.com/api/v1.0/email/send";
 
+    // =====================================================
+    // EMAILJS CONFIGURATION
+    // =====================================================
+
+    /*
+     * On Render:
+     * These values will come from Environment Variables.
+     *
+     * On local Tomcat:
+     * The fallback values will be used if the variables
+     * are not present.
+     */
+
     private static final String SERVICE_ID =
-            "service_utrl2ct";
+            getEnv(
+                "EMAILJS_SERVICE_ID",
+                "service_utrl2ct"
+            );
 
     private static final String PUBLIC_KEY =
-            "3om3V0_tb1ckVZWlS";
+            getEnv(
+                "EMAILJS_PUBLIC_KEY",
+                "3om3V0_tb1ckVZWlS"
+            );
 
     private static final String REGISTRATION_TEMPLATE =
-            "template_g3ebs0w";
+            getEnv(
+                "EMAILJS_REGISTRATION_TEMPLATE",
+                "template_g3ebs0w"
+            );
 
 
     // =====================================================
-    // WELCOME REGISTRATION EMAIL ONLY
+    // GET ENVIRONMENT VARIABLE
+    // =====================================================
+
+    private static String getEnv(
+            String key,
+            String fallback) {
+
+        String value = System.getenv(key);
+
+        if (value == null ||
+            value.trim().isEmpty()) {
+
+            return fallback;
+        }
+
+        return value.trim();
+    }
+
+
+    // =====================================================
+    // WELCOME REGISTRATION EMAIL
     // =====================================================
 
     public static boolean sendRegistrationEmail(
@@ -29,25 +71,45 @@ public class EmailJSService {
             String name,
             String role) {
 
-        if (email == null || email.trim().isEmpty()) {
-            System.out.println("ERROR: Email is empty.");
+        if (email == null ||
+            email.trim().isEmpty()) {
+
+            System.out.println(
+                    "ERROR: Registration email is empty."
+            );
+
             return false;
         }
 
         String params =
                 "{"
-                + "\"name\":\"" + escape(name) + "\","
-                + "\"email\":\"" + escape(email) + "\","
-                + "\"role\":\"" + escape(role) + "\","
-                + "\"to_email\":\"" + escape(email) + "\""
+                + "\"name\":\""
+                + escape(name)
+                + "\","
+
+                + "\"email\":\""
+                + escape(email)
+                + "\","
+
+                + "\"role\":\""
+                + escape(role)
+                + "\","
+
+                + "\"to_email\":\""
+                + escape(email)
+                + "\""
+
                 + "}";
 
-        return send(REGISTRATION_TEMPLATE, params);
+        return send(
+                REGISTRATION_TEMPLATE,
+                params
+        );
     }
 
 
     // =====================================================
-    // SEND EMAIL
+    // SEND EMAIL THROUGH EMAILJS
     // =====================================================
 
     private static boolean send(
@@ -58,10 +120,12 @@ public class EmailJSService {
 
         try {
 
-            URL url = new URL(API_URL);
+            URL url =
+                    new URL(API_URL);
 
             connection =
-                    (HttpURLConnection) url.openConnection();
+                    (HttpURLConnection)
+                    url.openConnection();
 
             connection.setRequestMethod("POST");
 
@@ -75,10 +139,20 @@ public class EmailJSService {
                     "application/json"
             );
 
-            connection.setConnectTimeout(15000);
-            connection.setReadTimeout(15000);
+            connection.setConnectTimeout(
+                    15000
+            );
+
+            connection.setReadTimeout(
+                    15000
+            );
+
             connection.setDoOutput(true);
 
+
+            // =================================================
+            // EMAILJS JSON
+            // =================================================
 
             String json =
                     "{"
@@ -100,34 +174,57 @@ public class EmailJSService {
                     + "}";
 
 
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "EmailJS: Sending email..."
+            );
+
+
+            // =================================================
+            // SEND REQUEST
+            // =================================================
+
             try (OutputStream output =
                          connection.getOutputStream()) {
 
                 byte[] data =
-                        json.getBytes(StandardCharsets.UTF_8);
+                        json.getBytes(
+                                StandardCharsets.UTF_8
+                        );
 
                 output.write(data);
                 output.flush();
             }
 
 
+            // =================================================
+            // READ RESPONSE
+            // =================================================
+
             int responseCode =
                     connection.getResponseCode();
 
             InputStream stream;
 
+
             if (responseCode >= 200 &&
                 responseCode < 300) {
 
-                stream = connection.getInputStream();
+                stream =
+                        connection.getInputStream();
 
             } else {
 
-                stream = connection.getErrorStream();
+                stream =
+                        connection.getErrorStream();
             }
 
 
             String responseMessage = "";
+
 
             if (stream != null) {
 
@@ -149,19 +246,35 @@ public class EmailJSService {
             );
 
 
+            // =================================================
+            // SUCCESS
+            // =================================================
+
             if (responseCode >= 200 &&
                 responseCode < 300) {
 
                 System.out.println(
-                        "Welcome email sent successfully."
+                        "EmailJS: Email sent successfully."
+                );
+
+                System.out.println(
+                        "========================================"
                 );
 
                 return true;
             }
 
 
+            // =================================================
+            // FAILURE
+            // =================================================
+
             System.out.println(
-                    "Welcome email failed."
+                    "EmailJS: Email sending failed."
+            );
+
+            System.out.println(
+                    "========================================"
             );
 
             return false;
@@ -182,6 +295,7 @@ public class EmailJSService {
         } finally {
 
             if (connection != null) {
+
                 connection.disconnect();
             }
         }
@@ -189,7 +303,7 @@ public class EmailJSService {
 
 
     // =====================================================
-    // READ RESPONSE
+    // READ RESPONSE STREAM
     // =====================================================
 
     private static String readStream(
@@ -204,6 +318,7 @@ public class EmailJSService {
 
         int length;
 
+
         while ((length =
                 stream.read(buffer)) != -1) {
 
@@ -213,6 +328,7 @@ public class EmailJSService {
                     length
             );
         }
+
 
         return output.toString(
                 StandardCharsets.UTF_8.name()
@@ -228,14 +344,31 @@ public class EmailJSService {
             String value) {
 
         if (value == null) {
+
             return "";
         }
 
+
         return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+                .replace(
+                        "\\",
+                        "\\\\"
+                )
+                .replace(
+                        "\"",
+                        "\\\""
+                )
+                .replace(
+                        "\n",
+                        "\\n"
+                )
+                .replace(
+                        "\r",
+                        "\\r"
+                )
+                .replace(
+                        "\t",
+                        "\\t"
+                );
     }
 }
