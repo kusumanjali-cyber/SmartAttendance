@@ -233,11 +233,13 @@
         </form>
 
     </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
+    emailjs.init("3om3V0_tb1ckVZWlS");
+</script>
 
-
+  <script>
     /* ==============================
        SHOW STUDENT / FACULTY FIELDS
        ============================== */
@@ -278,11 +280,35 @@
         document.getElementById("message");
 
 
-    registerForm.addEventListener("submit", function () {
-
+    registerForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
     registerButton.disabled = true;
     registerButton.innerText = "Registering...";
+     try {
 
+    await emailjs.send(
+        "service_utrl2ct",
+        "template_g3ebs0w",
+        {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            role: document.getElementById("role").value
+        }
+    );
+
+    registerForm.submit();
+
+} catch (error) {
+
+    console.log("Email error:", error);
+
+    message.innerText = "Registration email failed.";
+    message.className = "message error";
+
+    registerButton.disabled = false;
+    registerButton.innerText = "Register";
+
+}
 });
 
 </script>

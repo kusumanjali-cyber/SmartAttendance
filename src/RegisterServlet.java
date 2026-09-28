@@ -4,7 +4,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Properties;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,27 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import javax.mail.Message;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
 @WebServlet("/RegisterServlet")
 public class RegisterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-
-    // =========================================================
-    // GMAIL SETTINGS
-    // =========================================================
-
-    private static final String SENDER_EMAIL =
-            "kusumanjaligadupudi@gmail.com";
-
-    private static final String APP_PASSWORD =
-            System.getenv("SMART_ATTENDANCE_GMAIL_APP_PASSWORD");
 
     // =========================================================
     // GET REQUIRED ENVIRONMENT VARIABLE
@@ -63,11 +46,12 @@ public class RegisterServlet extends HttpServlet {
 
         // =====================================================
         // DATABASE ENVIRONMENT VARIABLES
-        // =====================================================\
-       
-String dbUrl = "jdbc:mysql://" + getRequiredEnv("DB_URL");
-String dbUser = getRequiredEnv("DB_USER");
-String dbPassword = getRequiredEnv("DB_PASSWORD");
+        // =====================================================
+
+        String dbUrl = "jdbc:mysql://" + getRequiredEnv("DB_URL");
+        String dbUser = getRequiredEnv("DB_USER");
+        String dbPassword = getRequiredEnv("DB_PASSWORD");
+
         // =====================================================
         // FORM VALUES
         // =====================================================
@@ -167,7 +151,7 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
         }
 
         // =====================================================
-        // DATABASE CONNECTION URL
+        // DATABASE CONNECTION
         // =====================================================
 
         Connection con = null;
@@ -178,25 +162,17 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
         try {
 
             // =================================================
-            // CHECK RENDER DATABASE VARIABLES
+            // CHECK DATABASE VARIABLES
             // =================================================
 
             if (dbUrl == null
-        || dbUser == null
-        || dbPassword == null) {
+                    || dbUser == null
+                    || dbPassword == null) {
 
                 throw new ServletException(
-                        "Database environment variables are missing. "
-                        + "Check DB_HOST, DB_PORT, DB_NAME, DB_USER "
-                        + "and DB_PASSWORD in Render."
+                        "Database environment variables are missing."
                 );
             }
-
-            // =================================================
-            // BUILD DATABASE URL
-            // =================================================
-
-            
 
             // =================================================
             // SAFE LOG
@@ -204,7 +180,7 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
 
             System.out.println("====================================");
             System.out.println("DATABASE CONNECTION START");
-           System.out.println("DB URL  : " + dbUrl);
+            System.out.println("DB URL  : " + dbUrl);
             System.out.println("DB USER : " + dbUser);
             System.out.println("====================================");
 
@@ -364,20 +340,6 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
             System.out.println("====================================");
 
             // =================================================
-            // WELCOME EMAIL
-            // =================================================
-
-            if ("STUDENT".equals(role)
-                    || "FACULTY".equals(role)) {
-
-                sendWelcomeEmail(
-                        email,
-                        name,
-                        role
-                );
-            }
-
-            // =================================================
             // SESSION
             // =================================================
 
@@ -473,8 +435,6 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
                     + e.getMessage()
             );
 
-            
-
             System.out.println(
                     "DB USER    : "
                     + dbUser
@@ -545,120 +505,6 @@ String dbPassword = getRequiredEnv("DB_PASSWORD");
 
             } catch (Exception ignored) {
             }
-        }
-    }
-
-    // =========================================================
-    // WELCOME EMAIL
-    // =========================================================
-
-    private void sendWelcomeEmail(
-            String email,
-            String name,
-            String role) {
-
-        try {
-
-            if (APP_PASSWORD == null
-                    || APP_PASSWORD.trim().isEmpty()) {
-
-                throw new IllegalStateException(
-                        "SMART_ATTENDANCE_GMAIL_APP_PASSWORD "
-                        + "is not set"
-                );
-            }
-
-            Properties props =
-                    new Properties();
-
-            props.put(
-                    "mail.smtp.auth",
-                    "true"
-            );
-
-            props.put(
-                    "mail.smtp.starttls.enable",
-                    "true"
-            );
-
-            props.put(
-                    "mail.smtp.host",
-                    "smtp.gmail.com"
-            );
-
-            props.put(
-                    "mail.smtp.port",
-                    "587"
-            );
-
-            Session mailSession =
-                    Session.getInstance(
-                            props,
-                            new javax.mail.Authenticator() {
-
-                                @Override
-                                protected PasswordAuthentication
-                                getPasswordAuthentication() {
-
-                                    return new PasswordAuthentication(
-                                            SENDER_EMAIL,
-                                            APP_PASSWORD
-                                    );
-                                }
-                            }
-                    );
-
-            Message message =
-                    new MimeMessage(mailSession);
-
-            message.setFrom(
-                    new InternetAddress(
-                            SENDER_EMAIL,
-                            "Smart Attendance Team"
-                    )
-            );
-
-            message.setRecipients(
-                    Message.RecipientType.TO,
-                    InternetAddress.parse(email)
-            );
-
-            message.setSubject(
-                    "Welcome to Smart Attendance"
-            );
-
-            String mailText =
-                    "Hello " + name + ",\n\n"
-                    + "Welcome to Smart Attendance!\n\n"
-                    + "Your registration as "
-                    + role
-                    + " was successful.\n\n"
-                    + "You can now login to the "
-                    + "Smart Attendance System.\n\n"
-                    + "Regards,\n"
-                    + "Smart Attendance Team";
-
-            message.setText(mailText);
-
-            Transport.send(message);
-
-            System.out.println(
-                    "WELCOME EMAIL SENT TO: "
-                    + email
-            );
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "WELCOME EMAIL FAILED"
-            );
-
-            System.out.println(
-                    "Reason: "
-                    + e.getMessage()
-            );
-
-            e.printStackTrace();
         }
     }
 }
