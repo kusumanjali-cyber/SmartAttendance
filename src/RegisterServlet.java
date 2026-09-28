@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -64,14 +63,11 @@ public class RegisterServlet extends HttpServlet {
 
         // =====================================================
         // DATABASE ENVIRONMENT VARIABLES
-        // =====================================================
-
-        String dbHost = getRequiredEnv("DB_HOST");
-        String dbPort = getRequiredEnv("DB_PORT");
-        String dbName = getRequiredEnv("DB_NAME");
-        String dbUser = getRequiredEnv("DB_USER");
-        String dbPassword = getRequiredEnv("DB_PASSWORD");
-
+        // =====================================================\
+       
+String dbUrl = "jdbc:mysql://" + getRequiredEnv("DB_URL");
+String dbUser = getRequiredEnv("DB_USER");
+String dbPassword = getRequiredEnv("DB_PASSWORD");
         // =====================================================
         // FORM VALUES
         // =====================================================
@@ -185,11 +181,9 @@ public class RegisterServlet extends HttpServlet {
             // CHECK RENDER DATABASE VARIABLES
             // =================================================
 
-            if (dbHost == null
-                    || dbPort == null
-                    || dbName == null
-                    || dbUser == null
-                    || dbPassword == null) {
+            if (dbUrl == null
+        || dbUser == null
+        || dbPassword == null) {
 
                 throw new ServletException(
                         "Database environment variables are missing. "
@@ -202,17 +196,7 @@ public class RegisterServlet extends HttpServlet {
             // BUILD DATABASE URL
             // =================================================
 
-            String dbUrl =
-                    "jdbc:mysql://"
-                    + dbHost
-                    + ":"
-                    + dbPort
-                    + "/"
-                    + dbName
-                    + "?sslMode=REQUIRED"
-                    + "&serverTimezone=UTC"
-                    + "&connectTimeout=30000"
-                    + "&socketTimeout=30000";
+            
 
             // =================================================
             // SAFE LOG
@@ -220,9 +204,7 @@ public class RegisterServlet extends HttpServlet {
 
             System.out.println("====================================");
             System.out.println("DATABASE CONNECTION START");
-            System.out.println("DB HOST : " + dbHost);
-            System.out.println("DB PORT : " + dbPort);
-            System.out.println("DB NAME : " + dbName);
+           System.out.println("DB URL  : " + dbUrl);
             System.out.println("DB USER : " + dbUser);
             System.out.println("====================================");
 
@@ -491,20 +473,7 @@ public class RegisterServlet extends HttpServlet {
                     + e.getMessage()
             );
 
-            System.out.println(
-                    "DB HOST    : "
-                    + dbHost
-            );
-
-            System.out.println(
-                    "DB PORT    : "
-                    + dbPort
-            );
-
-            System.out.println(
-                    "DB NAME    : "
-                    + dbName
-            );
+            
 
             System.out.println(
                     "DB USER    : "

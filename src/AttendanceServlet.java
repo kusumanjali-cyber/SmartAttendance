@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -14,14 +13,20 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/AttendanceServlet")
 public class AttendanceServlet extends HttpServlet {
 
-    private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
+    private static final String DB_HOST = System.getenv("DB_HOST");
+    private static final String DB_PORT = System.getenv("DB_PORT");
+    private static final String DB_NAME = System.getenv("DB_NAME");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+    private static String getDbUrl() {
+
+        return "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
+                + "?sslMode=REQUIRED"
+                + "&serverTimezone=UTC"
+                + "&connectTimeout=30000"
+                + "&socketTimeout=30000";
+    }
 
     @Override
     protected void doGet(
@@ -58,7 +63,6 @@ public class AttendanceServlet extends HttpServlet {
             } else {
 
                 sendError(response, "Invalid type");
-
             }
 
         } catch (Exception e) {
@@ -93,7 +97,7 @@ public class AttendanceServlet extends HttpServlet {
         try (
             Connection con =
                     DriverManager.getConnection(
-                            DB_URL,
+                            getDbUrl(),
                             DB_USER,
                             DB_PASSWORD
                     );
@@ -200,7 +204,7 @@ public class AttendanceServlet extends HttpServlet {
         try (
             Connection con =
                     DriverManager.getConnection(
-                            DB_URL,
+                            getDbUrl(),
                             DB_USER,
                             DB_PASSWORD
                     );
@@ -316,168 +320,167 @@ public class AttendanceServlet extends HttpServlet {
 
 
     /* =========================
-   ATTENDANCE RECORDS
-   ========================= */
+       ATTENDANCE RECORDS
+       ========================= */
 
-private void getRecords(
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws Exception {
+    private void getRecords(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws Exception {
 
-    javax.servlet.http.HttpSession session =
-            request.getSession(false);
+        javax.servlet.http.HttpSession session =
+                request.getSession(false);
 
-    String facultySubject =
-            session == null ? "" :
-            (String) session.getAttribute("subject");
+        String facultySubject =
+                session == null ? "" :
+                (String) session.getAttribute("subject");
 
-    String sql =
-            "SELECT ar.id, "
-            + "ar.student_id, "
-            + "ar.subject_id, "
-            + "ar.total_classes, "
-            + "ar.attended_classes, "
-            + "ar.attendance_date, "
-            + "s.student_name, "
-            + "s.roll_number, "
-            + "s.department, "
-            + "s.section, "
-            + "sub.subject_name "
-            + "FROM attendance_records ar "
-            + "JOIN students s "
-            + "ON ar.student_id = s.id "
-            + "JOIN subjects sub "
-            + "ON ar.subject_id = sub.id "
-            + "ORDER BY ar.attendance_date DESC";
-
-    try (
-        Connection con =
-                DriverManager.getConnection(
-                        DB_URL,
-                        DB_USER,
-                        DB_PASSWORD
-                );
-
-        PreparedStatement ps =
-                con.prepareStatement(sql)
-    ) {
-
+        String sql =
+                "SELECT ar.id, "
+                + "ar.student_id, "
+                + "ar.subject_id, "
+                + "ar.total_classes, "
+                + "ar.attended_classes, "
+                + "ar.attendance_date, "
+                + "s.student_name, "
+                + "s.roll_number, "
+                + "s.department, "
+                + "s.section, "
+                + "sub.subject_name "
+                + "FROM attendance_records ar "
+                + "JOIN students s "
+                + "ON ar.student_id = s.id "
+                + "JOIN subjects sub "
+                + "ON ar.subject_id = sub.id "
+                + "ORDER BY ar.attendance_date DESC";
 
         try (
-            ResultSet rs =
-                    ps.executeQuery()
+            Connection con =
+                    DriverManager.getConnection(
+                            getDbUrl(),
+                            DB_USER,
+                            DB_PASSWORD
+                    );
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql)
         ) {
 
-            StringBuilder json =
-                    new StringBuilder();
+            try (
+                ResultSet rs =
+                        ps.executeQuery()
+            ) {
 
-            json.append("[");
+                StringBuilder json =
+                        new StringBuilder();
 
-            boolean first = true;
+                json.append("[");
 
-            while (rs.next()) {
+                boolean first = true;
 
-                if (!first) {
-                    json.append(",");
-                }
+                while (rs.next()) {
 
-                json.append("{");
+                    if (!first) {
+                        json.append(",");
+                    }
 
-                json.append("\"id\":")
-                     .append(rs.getInt("id"))
-                     .append(",");
+                    json.append("{");
 
-                json.append("\"studentId\":")
-                     .append(rs.getInt("student_id"))
-                     .append(",");
+                    json.append("\"id\":")
+                         .append(rs.getInt("id"))
+                         .append(",");
 
-                json.append("\"subjectId\":")
-                     .append(rs.getInt("subject_id"))
-                     .append(",");
+                    json.append("\"studentId\":")
+                         .append(rs.getInt("student_id"))
+                         .append(",");
 
-                json.append("\"totalClasses\":")
-                     .append(rs.getInt("total_classes"))
-                     .append(",");
+                    json.append("\"subjectId\":")
+                         .append(rs.getInt("subject_id"))
+                         .append(",");
 
-                json.append("\"attendedClasses\":")
-                     .append(rs.getInt("attended_classes"))
-                     .append(",");
+                    json.append("\"totalClasses\":")
+                         .append(rs.getInt("total_classes"))
+                         .append(",");
 
-                json.append("\"attendanceDate\":\"")
-                     .append(
-                         escapeJson(
-                             String.valueOf(
-                                 rs.getDate(
-                                     "attendance_date"
+                    json.append("\"attendedClasses\":")
+                         .append(rs.getInt("attended_classes"))
+                         .append(",");
+
+                    json.append("\"attendanceDate\":\"")
+                         .append(
+                             escapeJson(
+                                 String.valueOf(
+                                     rs.getDate(
+                                         "attendance_date"
+                                     )
                                  )
                              )
                          )
-                     )
-                     .append("\",");
+                         .append("\",");
 
-                json.append("\"studentName\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "student_name"
+                    json.append("\"studentName\":\"")
+                         .append(
+                             escapeJson(
+                                 rs.getString(
+                                     "student_name"
+                                 )
                              )
                          )
-                     )
-                     .append("\",");
+                         .append("\",");
 
-                json.append("\"rollNumber\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "roll_number"
+                    json.append("\"rollNumber\":\"")
+                         .append(
+                             escapeJson(
+                                 rs.getString(
+                                     "roll_number"
+                                 )
                              )
                          )
-                     )
-                     .append("\",");
+                         .append("\",");
 
-                json.append("\"department\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "department"
+                    json.append("\"department\":\"")
+                         .append(
+                             escapeJson(
+                                 rs.getString(
+                                     "department"
+                                 )
                              )
                          )
-                     )
-                     .append("\",");
+                         .append("\",");
 
-                json.append("\"section\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "section"
+                    json.append("\"section\":\"")
+                         .append(
+                             escapeJson(
+                                 rs.getString(
+                                     "section"
+                                 )
                              )
                          )
-                     )
-                     .append("\",");
+                         .append("\",");
 
-                json.append("\"subjectName\":\"")
-                     .append(
-                         escapeJson(
-                             rs.getString(
-                                 "subject_name"
+                    json.append("\"subjectName\":\"")
+                         .append(
+                             escapeJson(
+                                 rs.getString(
+                                     "subject_name"
+                                 )
                              )
                          )
-                     )
-                     .append("\"");
+                         .append("\"");
 
-                json.append("}");
+                    json.append("}");
 
-                first = false;
+                    first = false;
+                }
+
+                json.append("]");
+
+                response.getWriter().write(
+                        json.toString()
+                );
             }
-
-            json.append("]");
-
-            response.getWriter().write(
-                    json.toString()
-            );
         }
     }
-}
 
 
     /* =========================

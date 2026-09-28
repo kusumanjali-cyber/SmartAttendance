@@ -10,12 +10,11 @@ import java.util.Locale;
 
 public class AttendanceReminderService {
 
-    private static final String DB_URL =
-        "jdbc:mysql://localhost:3306/smartattendance"
-        + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+    private static final String DB_HOST = System.getenv("DB_HOST");
+    private static final String DB_PORT = System.getenv("DB_PORT");
+    private static final String DB_NAME = System.getenv("DB_NAME");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     public static void checkAttendanceReminders() {
 
@@ -36,11 +35,19 @@ public class AttendanceReminderService {
             "AND t.end_time < ?";
 
         try {
+
             Class.forName("com.mysql.cj.jdbc.Driver");
+
+            String dbUrl =
+                "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME
+                + "?sslMode=REQUIRED"
+                + "&serverTimezone=UTC"
+                + "&connectTimeout=30000"
+                + "&socketTimeout=30000";
 
             try (Connection con =
                     DriverManager.getConnection(
-                        DB_URL, DB_USER, DB_PASSWORD);
+                        dbUrl, DB_USER, DB_PASSWORD);
                  PreparedStatement ps =
                     con.prepareStatement(sql)) {
 
