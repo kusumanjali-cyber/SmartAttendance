@@ -18,13 +18,13 @@ public class StudentAttendanceServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false"
-            + "&allowPublicKeyRetrieval=true"
-            + "&serverTimezone=UTC";
+            System.getenv("DB_URL");
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+    private static final String DB_USER =
+            System.getenv("DB_USER");
+
+    private static final String DB_PASSWORD =
+            System.getenv("DB_PASSWORD");
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -45,7 +45,9 @@ public class StudentAttendanceServlet extends HttpServlet {
                 || session.getAttribute("username") == null
                 || session.getAttribute("passwordVerified") == null) {
 
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(
+                    HttpServletResponse.SC_UNAUTHORIZED
+            );
 
             out.print(
                     "{\"success\":false,"
@@ -60,6 +62,11 @@ public class StudentAttendanceServlet extends HttpServlet {
                         session.getAttribute("username")
                 );
 
+        /*
+         * IMPORTANT:
+         * Students are linked to users through students.user_id.
+         * Do not match using email.
+         */
         String sql =
                 "SELECT "
                 + "s.id, "
@@ -68,23 +75,40 @@ public class StudentAttendanceServlet extends HttpServlet {
                 + "COALESCE(SUM(ar.attended_classes), 0) AS attended_classes "
                 + "FROM users u "
                 + "INNER JOIN students s "
-                + "ON LOWER(TRIM(s.email)) = LOWER(TRIM(u.username)) "
+                + "ON s.user_id = u.id "
                 + "LEFT JOIN attendance_records ar "
                 + "ON ar.student_id = s.id "
                 + "WHERE LOWER(TRIM(u.username)) = LOWER(TRIM(?)) "
-                + "AND u.role = 'STUDENT' "
+                + "AND UPPER(TRIM(u.role)) = 'STUDENT' "
                 + "GROUP BY s.id, s.student_name";
 
         try {
 
+            if (DB_URL == null
+                    || DB_USER == null
+                    || DB_PASSWORD == null) {
+
+                response.setStatus(
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+                );
+
+                out.print(
+                        "{\"success\":false,"
+                        + "\"message\":\"Database configuration is missing\"}"
+                );
+
+                return;
+            }
+
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             try (
-                Connection con = DriverManager.getConnection(
-                        DB_URL,
-                        DB_USER,
-                        DB_PASSWORD
-                );
+                Connection con =
+                        DriverManager.getConnection(
+                                DB_URL,
+                                DB_USER,
+                                DB_PASSWORD
+                        );
 
                 PreparedStatement ps =
                         con.prepareStatement(sql)
@@ -142,19 +166,13 @@ public class StudentAttendanceServlet extends HttpServlet {
                     }
 
                     /*
-                     * Calculate the number of FUTURE classes
-                     * the student needs to attend continuously
-                     * to reach 75%.
-                     *
-                     * Formula:
-                     *
-                     * (attended + x) / (total + x) >= 0.75
-                     *
-                     * x >= 3 * total - 4 * attended
+                     * Calculate future classes needed
+                     * to reach 75% attendance.
                      */
                     int neededClasses = 0;
 
-                    if (percentage < 75.0 && totalClasses > 0) {
+                    if (percentage < 75.0
+                            && totalClasses > 0) {
 
                         neededClasses =
                                 (3 * totalClasses)

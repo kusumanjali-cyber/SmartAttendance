@@ -535,250 +535,152 @@
 
 </main>
 
-
 <script>
+function logout(){ window.location.href='login.html'; }
 
-    function logout() {
-        window.location.href = "login.html";
-    }
+function esc(v){
+    return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
 
+function todayISO(){
+    const d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 
-    document.addEventListener("DOMContentLoaded", function () {
+function showTodayDate(){
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+async function loadTodayAttendance() {
+    const box = document.getElementById('statusList');
 
-        const name = sessionStorage.getItem("facultyName");
+    box.innerHTML =
+        '<div class="no-attendance">Loading attendance...</div>';
 
-        if (name) {
+    try {
+        const response = await fetch(
+            'AttendanceServlet?type=records&ts=' + Date.now(),
+            {
+                cache: 'no-store',
+                credentials: 'same-origin'
+            }
+        );
 
-            document.getElementById("facultyName").textContent = name;
-
-            document.getElementById("welcomeText").textContent =
-                "Welcome, " + name;
+        if (!response.ok) {
+            throw new Error('Attendance request failed');
         }
 
-        showTodayDate();
-        loadTodayAttendance();
+        const records = await response.json();
 
-    });
+        const today = todayISO();
+        const groups = {};
 
+        records.forEach(r => {
 
-    function showTodayDate() {
+            const recordDate = String(
+                r.attendanceDate || ''
+            ).substring(0, 10);
 
-        const today = new Date();
+            if (recordDate !== today) {
+                return;
+            }
 
-        const formatted =
-            today.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            });
+            const subject = String(
+                r.subjectName || 'Unknown Subject'
+            ).trim();
 
-        document.getElementById("todayDate").textContent =
-            formatted;
+            const branch = String(
+                r.department || '-'
+            ).trim().toUpperCase();
+
+            const section = String(
+                r.section || '-'
+            ).trim().toUpperCase();
+
+            const key =
+                subject + '|' + branch + '|' + section;
+
+            if (!groups[key]) {
+                groups[key] = {
+                    subject: subject,
+                    branch: branch,
+                    section: section,
+                    present: 0,
+                    absent: 0
+                };
+            }
+
+            const status = String(
+                r.status ||
+                r.attendanceStatus ||
+                ''
+            ).trim().toUpperCase();
+
+            if (status === 'PRESENT' || status === 'P') {
+                groups[key].present++;
+            } else if (status === 'ABSENT' || status === 'A') {
+                groups[key].absent++;
+            }
+        });
+
+        const groupList = Object.values(groups);
+
+        if (groupList.length === 0) {
+            box.innerHTML =
+                '<div class="no-attendance">' +
+                'No attendance marked today.' +
+                '</div>';
+            return;
+        }
+
+        box.innerHTML = groupList.map(g => `
+            <div class="status-item"
+                 style="
+                    display:block;
+                    min-width:240px;
+                 ">
+
+                <div style="
+                    color:#073b78;
+                    font-size:16px;
+                    font-weight:bold;
+                    margin-bottom:8px;
+                ">
+                    ${esc(g.subject)}
+                </div>
+
+                <div class="branch-section"
+                     style="margin-bottom:10px;">
+                    Branch: ${esc(g.branch)}
+                    &nbsp;&nbsp;
+                    Section: ${esc(g.section)}
+                </div>
+
+                <div class="attendance-counts">
+
+                    <span class="count-badge present-badge">
+                        Present: ${g.present}
+                    </span>
+
+                    <span class="count-badge absent-badge">
+                        Absent: ${g.absent}
+                    </span>
+
+                </div>
+
+            </div>
+        `).join('');
+
+    } catch (error) {
+
+        console.error(error);
+
+        box.innerHTML =
+            '<div class="no-attendance">' +
+            'Unable to load attendance records.' +
+            '</div>';
     }
-
-
-    function loadTodayAttendance() {
-
-        const statusList =
-            document.getElementById("statusList");
-
-        fetch("AttendanceServlet?type=records")
-
-            .then(response => {
-
-                if (!response.ok) {
-                    throw new Error("Unable to load attendance");
-                }
-
-                return response.json();
-
-            })
-
-            .then(records => {
-
-                const today = new Date();
-
-                const todayISO =
-                    today.getFullYear() +
-                    "-" +
-                    String(today.getMonth() + 1).padStart(2, "0") +
-                    "-" +
-                    String(today.getDate()).padStart(2, "0");
-
-
-                const todayRecords =
-                    records.filter(record => {
-
-                        if (!record.attendanceDate) {
-                            return false;
-                        }
-
-                        const recordDate =
-                            String(record.attendanceDate)
-                                .substring(0, 10);
-
-                        return recordDate === todayISO;
-
-                    });
-
-
-                const combinations = new Set();
-
-
-                todayRecords.forEach(record => {
-
-                    const branch =
-                        record.department ||
-                        record.branch ||
-                        "";
-
-                    const section =
-                        record.section ||
-                        "";
-
-                    if (branch && section) {
-
-                        combinations.add(
-                            branch.toUpperCase() +
-                            "||" +
-                            section.toUpperCase()
-                        );
-
-                    }
-
-                });
-
-
-                statusList.innerHTML = "";
-
-
-                if (combinations.size === 0) {
-
-                    statusList.innerHTML = `
-                        <div class="no-attendance">
-                            No attendance marked today.
-                        </div>
-                    `;
-
-                    return;
-                }
-
-
-                Array.from(combinations)
-                    .sort()
-                    .forEach(value => {
-
-                        const parts =
-                            value.split("||");
-
-                        const branch =
-                            parts[0];
-
-                        const section =
-                            parts[1];
-
-
-                        // Calculate today's present and absent counts
-                        // from the attendance records returned by the servlet.
-                        const groupRecords = todayRecords.filter(record => {
-                            const recordBranch = String(
-                                record.department || record.branch || ""
-                            ).toUpperCase();
-
-                            const recordSection = String(
-                                record.section || ""
-                            ).toUpperCase();
-
-                            return recordBranch === branch &&
-                                   recordSection === section;
-                        });
-
-                        let presentCount = 0;
-                        let totalCount = 0;
-
-                        groupRecords.forEach(record => {
-                            const total = Number(
-                                record.totalClasses ??
-                                record.total_classes ??
-                                record.total ??
-                                1
-                            );
-
-                            const attended = Number(
-                                record.attendedClasses ??
-                                record.attended_classes ??
-                                record.attended ??
-                                0
-                            );
-
-                            if (Number.isFinite(total) && total > 0) {
-                                totalCount += total;
-                            }
-
-                            if (Number.isFinite(attended) && attended > 0) {
-                                presentCount += Math.min(attended, total > 0 ? total : attended);
-                            }
-                        });
-
-                        const absentCount = Math.max(
-                            totalCount - presentCount,
-                            0
-                        );
-
-                        const item =
-                            document.createElement("div");
-
-                        item.className =
-                            "status-item";
-
-                        item.innerHTML = `
-                            <span class="branch-section">
-                                ${escapeHTML(branch)} - ${escapeHTML(section)}
-                            </span>
-
-                            <span class="attendance-counts">
-                                <span class="count-badge present-badge">
-                                    Present ${presentCount}
-                                </span>
-                                <span class="count-badge absent-badge">
-                                    Absent ${absentCount}
-                                </span>
-                            </span>
-                        `;
-
-                        statusList.appendChild(item);
-
-                    });
-
-            })
-
-            .catch(error => {
-
-                console.error(error);
-
-                statusList.innerHTML = `
-                    <div class="no-attendance">
-                        Unable to load attendance records.
-                    </div>
-                `;
-
-            });
-
-    }
-
-
-    function escapeHTML(value) {
-
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-
-    }
+}
 
 </script>
-
 </body>
 </html>

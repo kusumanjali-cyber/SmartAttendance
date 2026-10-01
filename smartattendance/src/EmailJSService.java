@@ -10,25 +10,23 @@ public class EmailJSService {
     private static final String API_URL =
             "https://api.emailjs.com/api/v1.0/email/send";
 
-    // =========================================================
-    // EMAILJS CONFIGURATION
-    // =========================================================
-
     private static final String SERVICE_ID =
-            "service_fu26rgv";
+            "service_utrl2ct";
 
     private static final String PUBLIC_KEY =
             "3om3V0_tb1ckVZWlS";
 
     private static final String REGISTRATION_TEMPLATE =
-            "template_l36pz5n";
+            "template_g3ebs0w";
 
-    private static final String MARKS_TEMPLATE =
-            "template_j2ajnx4";
+    // Private Key is read from environment variable.
+    // Never hardcode it or print it.
+    private static final String PRIVATE_KEY =
+            System.getenv("EMAILJS_PRIVATE_KEY");
 
 
     // =========================================================
-    // REGISTRATION EMAIL
+    // REGISTRATION / WELCOME EMAIL
     // =========================================================
 
     public static boolean sendRegistrationEmail(
@@ -36,13 +34,15 @@ public class EmailJSService {
             String name,
             String role) {
 
-        System.out.println();
-        System.out.println("==========================================");
-        System.out.println("SMARTATTEND - REGISTRATION EMAIL");
-        System.out.println("==========================================");
-
         if (email == null || email.trim().isEmpty()) {
-            System.out.println("ERROR: Student/User email is empty.");
+            System.out.println("ERROR: Email is empty.");
+            return false;
+        }
+
+        if (PRIVATE_KEY == null || PRIVATE_KEY.trim().isEmpty()) {
+            System.out.println(
+                    "ERROR: EMAILJS_PRIVATE_KEY environment variable is missing."
+            );
             return false;
         }
 
@@ -54,51 +54,12 @@ public class EmailJSService {
                 + "\"to_email\":\"" + escape(email) + "\""
                 + "}";
 
-        return send(
-                REGISTRATION_TEMPLATE,
-                params
-        );
+        return send(REGISTRATION_TEMPLATE, params);
     }
 
 
     // =========================================================
-    // MARKS NOTIFICATION
-    // =========================================================
-
-    public static boolean sendMarksNotification(
-            String email,
-            String name,
-            String subject,
-            String marks) {
-
-        System.out.println();
-        System.out.println("==========================================");
-        System.out.println("SMARTATTEND - MARKS EMAIL");
-        System.out.println("==========================================");
-
-        if (email == null || email.trim().isEmpty()) {
-            System.out.println("ERROR: Student email is empty.");
-            return false;
-        }
-
-        String params =
-                "{"
-                + "\"name\":\"" + escape(name) + "\","
-                + "\"email\":\"" + escape(email) + "\","
-                + "\"to_email\":\"" + escape(email) + "\","
-                + "\"subject\":\"" + escape(subject) + "\","
-                + "\"marks\":\"" + escape(marks) + "\""
-                + "}";
-
-        return send(
-                MARKS_TEMPLATE,
-                params
-        );
-    }
-
-
-    // =========================================================
-    // COMMON EMAILJS SEND METHOD
+    // SEND EMAIL THROUGH EMAILJS
     // =========================================================
 
     private static boolean send(
@@ -108,11 +69,6 @@ public class EmailJSService {
         HttpURLConnection connection = null;
 
         try {
-
-            System.out.println("EmailJS URL: " + API_URL);
-            System.out.println("Service ID: " + SERVICE_ID);
-            System.out.println("Template ID: " + templateId);
-            System.out.println("Template Params: " + params);
 
             URL url = new URL(API_URL);
 
@@ -125,22 +81,23 @@ public class EmailJSService {
                     "Content-Type",
                     "application/json; charset=UTF-8"
             );
+            connection.setRequestProperty(
+        "Accept",
+        "application/json"
+);
 
             connection.setRequestProperty(
-                    "Accept",
-                    "application/json"
-            );
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153.0.0.0 Safari/537.36"
+);
 
             connection.setConnectTimeout(15000);
             connection.setReadTimeout(15000);
-
             connection.setDoOutput(true);
 
 
-            // =================================================
-            // EMAILJS JSON REQUEST
-            // =================================================
-
+            // IMPORTANT:
+            // accessToken = EmailJS Private Key
             String json =
                     "{"
                     + "\"service_id\":\""
@@ -155,36 +112,53 @@ public class EmailJSService {
                     + escape(PUBLIC_KEY)
                     + "\","
 
+                    + "\"accessToken\":\""
+                    + escape(PRIVATE_KEY)
+                    + "\","
+
                     + "\"template_params\":"
                     + params
 
                     + "}";
 
 
-            System.out.println();
-            System.out.println("========== EMAILJS REQUEST ==========");
-            System.out.println(json);
-            System.out.println("=====================================");
+            System.out.println(
+                    "========== EMAILJS REQUEST =========="
+            );
 
+            System.out.println(
+                    "Service ID     : " + SERVICE_ID
+            );
 
-            // =================================================
-            // SEND
-            // =================================================
+            System.out.println(
+                    "Template ID    : " + templateId
+            );
+
+            System.out.println(
+                    "Public Key     : configured"
+            );
+
+            System.out.println(
+                    "Private Key    : configured"
+            );
+
+            System.out.println(
+                    "====================================="
+            );
+
 
             try (OutputStream output =
                          connection.getOutputStream()) {
 
-                byte[] data =
-                        json.getBytes(StandardCharsets.UTF_8);
+                output.write(
+                        json.getBytes(
+                                StandardCharsets.UTF_8
+                        )
+                );
 
-                output.write(data);
                 output.flush();
             }
 
-
-            // =================================================
-            // RESPONSE
-            // =================================================
 
             int responseCode =
                     connection.getResponseCode();
@@ -194,11 +168,13 @@ public class EmailJSService {
             if (responseCode >= 200 &&
                 responseCode < 300) {
 
-                stream = connection.getInputStream();
+                stream =
+                        connection.getInputStream();
 
             } else {
 
-                stream = connection.getErrorStream();
+                stream =
+                        connection.getErrorStream();
             }
 
 
@@ -213,8 +189,10 @@ public class EmailJSService {
             }
 
 
-            System.out.println();
-            System.out.println("========== EMAILJS RESPONSE ==========");
+            System.out.println(
+                    "========== EMAILJS RESPONSE =========="
+            );
+
             System.out.println(
                     "HTTP Code: " + responseCode
             );
@@ -223,43 +201,24 @@ public class EmailJSService {
                     "Response: " + responseMessage
             );
 
-            System.out.println("======================================");
-
-
-            if (responseCode >= 200 &&
-                responseCode < 300) {
-
-                System.out.println(
-                        "SUCCESS: EmailJS accepted the email."
-                );
-
-                return true;
-            }
-
-
             System.out.println(
-                    "FAILED: EmailJS rejected the request."
+                    "======================================"
             );
 
-            return false;
 
+            return responseCode >= 200 &&
+                   responseCode < 300;
 
         } catch (Exception e) {
 
-            System.out.println();
-            System.out.println("========== EMAILJS JAVA ERROR ==========");
-
             System.out.println(
-                    "Error: " + e.getMessage()
+                    "EMAILJS ERROR: "
+                    + e.getMessage()
             );
 
             e.printStackTrace();
 
-            System.out.println(
-                    "=========================================");
-
             return false;
-
 
         } finally {
 
@@ -321,4 +280,3 @@ public class EmailJSService {
                 .replace("\t", "\\t");
     }
 }
-

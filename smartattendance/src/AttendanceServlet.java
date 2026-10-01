@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,12 +14,13 @@ import javax.servlet.http.HttpServletResponse;
 public class AttendanceServlet extends HttpServlet {
 
     private static final String DB_URL =
-        "jdbc:mysql://smartattendance-db-kusumanjaligadupudi-ef99.d.aivencloud.com:21100/defaultdb"
-        + "?sslMode=REQUIRED"
-        + "&serverTimezone=UTC";
+            System.getenv("DB_URL");
 
-    private static final String DB_USER = "avnadmin";
-    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
+    private static final String DB_USER =
+            System.getenv("DB_USER");
+
+    private static final String DB_PASSWORD =
+            System.getenv("DB_PASSWORD");
 
     @Override
     protected void doGet(
@@ -33,7 +33,7 @@ public class AttendanceServlet extends HttpServlet {
 
         String type = request.getParameter("type");
 
-        if (type == null) {
+        if (type == null || type.trim().isEmpty()) {
             sendError(response, "Missing type");
             return;
         }
@@ -52,7 +52,7 @@ public class AttendanceServlet extends HttpServlet {
 
             } else if ("records".equalsIgnoreCase(type)) {
 
-                getRecords(request, response);
+                getRecords(response);
 
             } else {
 
@@ -176,7 +176,7 @@ public class AttendanceServlet extends HttpServlet {
 
             sql +=
                 "WHERE department = ? "
-                + "AND section = ? ";
+                + "AND section = ";
 
         } else if (hasBranch) {
 
@@ -186,7 +186,7 @@ public class AttendanceServlet extends HttpServlet {
         } else if (hasSection) {
 
             sql +=
-                "WHERE section = ";
+                "WHERE section = ? ";
         }
 
         sql +=
@@ -314,16 +314,8 @@ public class AttendanceServlet extends HttpServlet {
        ========================= */
 
     private void getRecords(
-            HttpServletRequest request,
             HttpServletResponse response)
             throws Exception {
-
-        javax.servlet.http.HttpSession session =
-                request.getSession(false);
-
-        String facultySubject =
-                session == null ? "" :
-                (String) session.getAttribute("subject");
 
         String sql =
                 "SELECT ar.id, "
@@ -342,7 +334,6 @@ public class AttendanceServlet extends HttpServlet {
                 + "ON ar.student_id = s.id "
                 + "JOIN subjects sub "
                 + "ON ar.subject_id = sub.id "
-                + "WHERE LOWER(TRIM(sub.subject_name)) = LOWER(TRIM(?)) "
                 + "ORDER BY ar.attendance_date DESC";
 
         try (
@@ -354,115 +345,141 @@ public class AttendanceServlet extends HttpServlet {
                     );
 
             PreparedStatement ps =
-                    con.prepareStatement(sql)
+                    con.prepareStatement(sql);
+
+            ResultSet rs =
+                    ps.executeQuery()
         ) {
 
-            ps.setString(
-                    1,
-                    facultySubject
-            );
+            StringBuilder json =
+                    new StringBuilder();
 
-            try (
-                ResultSet rs =
-                        ps.executeQuery()
-            ) {
+            json.append("[");
 
-                StringBuilder json =
-                        new StringBuilder();
+            boolean first = true;
 
-                json.append("[");
+            while (rs.next()) {
 
-                boolean first = true;
+                if (!first) {
+                    json.append(",");
+                }
 
-                while (rs.next()) {
+                int totalClasses =
+                        rs.getInt("total_classes");
 
-                    if (!first) {
-                        json.append(",");
-                    }
+                int attendedClasses =
+                        rs.getInt("attended_classes");
 
-                    json.append("{");
+                String status;
 
-                    json.append("\"id\":")
-                         .append(rs.getInt("id"))
-                         .append(",");
+                if (attendedClasses > 0) {
+                    status = "Present";
+                } else {
+                    status = "Absent";
+                }
 
-                    json.append("\"studentId\":")
-                         .append(rs.getInt("student_id"))
-                         .append(",");
+                json.append("{");
 
-                    json.append("\"subjectId\":")
-                         .append(rs.getInt("subject_id"))
-                         .append(",");
+                json.append("\"id\":")
+                     .append(rs.getInt("id"))
+                     .append(",");
 
-                    json.append("\"totalClasses\":")
-                         .append(rs.getInt("total_classes"))
-                         .append(",");
+                json.append("\"studentId\":")
+                     .append(rs.getInt("student_id"))
+                     .append(",");
 
-                    json.append("\"attendedClasses\":")
-                         .append(rs.getInt("attended_classes"))
-                         .append(",");
+                json.append("\"subjectId\":")
+                     .append(rs.getInt("subject_id"))
+                     .append(",");
 
-                    json.append("\"attendanceDate\":\"")
-                         .append(
-                             escapeJson(
-                                 String.valueOf(
-                                     rs.getDate("attendance_date")
+                json.append("\"totalClasses\":")
+                     .append(totalClasses)
+                     .append(",");
+
+                json.append("\"attendedClasses\":")
+                     .append(attendedClasses)
+                     .append(",");
+
+                json.append("\"status\":\"")
+                     .append(status)
+                     .append("\",");
+
+                json.append("\"attendanceStatus\":\"")
+                     .append(status)
+                     .append("\",");
+
+                json.append("\"attendanceDate\":\"")
+                     .append(
+                         escapeJson(
+                             String.valueOf(
+                                 rs.getDate(
+                                     "attendance_date"
                                  )
                              )
                          )
-                         .append("\",");
+                     )
+                     .append("\",");
 
-                    json.append("\"studentName\":\"")
-                         .append(
-                             escapeJson(
-                                 rs.getString("student_name")
+                json.append("\"studentName\":\"")
+                     .append(
+                         escapeJson(
+                             rs.getString(
+                                 "student_name"
                              )
                          )
-                         .append("\",");
+                     )
+                     .append("\",");
 
-                    json.append("\"rollNumber\":\"")
-                         .append(
-                             escapeJson(
-                                 rs.getString("roll_number")
+                json.append("\"rollNumber\":\"")
+                     .append(
+                         escapeJson(
+                             rs.getString(
+                                 "roll_number"
                              )
                          )
-                         .append("\",");
+                     )
+                     .append("\",");
 
-                    json.append("\"department\":\"")
-                         .append(
-                             escapeJson(
-                                 rs.getString("department")
+                json.append("\"department\":\"")
+                     .append(
+                         escapeJson(
+                             rs.getString(
+                                 "department"
                              )
                          )
-                         .append("\",");
+                     )
+                     .append("\",");
 
-                    json.append("\"section\":\"")
-                         .append(
-                             escapeJson(
-                                 rs.getString("section")
+                json.append("\"section\":\"")
+                     .append(
+                         escapeJson(
+                             rs.getString(
+                                 "section"
                              )
                          )
-                         .append("\",");
+                     )
+                     .append("\",");
 
-                    json.append("\"subjectName\":\"")
-                         .append(
-                             escapeJson(
-                                 rs.getString("subject_name")
+                json.append("\"subjectName\":\"")
+                     .append(
+                         escapeJson(
+                             rs.getString(
+                                 "subject_name"
                              )
                          )
-                         .append("\"");
+                     )
+                     .append("\"");
 
-                    json.append("}");
+                json.append("}");
 
-                    first = false;
-                }
-
-                json.append("]");
-
-                response.getWriter().write(
-                        json.toString()
-                );
+                first = false;
             }
+
+            json.append("]");
+
+            response.getWriter().write(
+                    json.toString()
+            );
         }
     }
 

@@ -503,56 +503,6 @@ public class FacultyMarkServlet extends HttpServlet {
 
                 boolean emailSent = false;
 
-                if (!studentEmail.trim().isEmpty()) {
-
-                    System.out.println();
-                    System.out.println(
-                        "=========================================="
-                    );
-
-                    System.out.println(
-                        "SMARTATTEND MARKS NOTIFICATION"
-                    );
-
-                    System.out.println(
-                        "Student : " + studentName
-                    );
-
-                    System.out.println(
-                        "Email   : " + studentEmail
-                    );
-
-                    System.out.println(
-                        "Subject : " + subjectName
-                    );
-
-                    System.out.println(
-                        "Marks   : " + marks
-                    );
-
-                    System.out.println(
-                        "Action  : " + action
-                    );
-
-                    System.out.println(
-                        "=========================================="
-                    );
-
-
-                    emailSent =
-                        EmailJSService.sendMarksNotification(
-                            studentEmail,
-                            studentName,
-                            subjectName,
-                            String.valueOf(marks)
-                        );
-
-                } else {
-
-                    System.out.println(
-                        "WARNING: Student email is empty."
-                    );
-                }
 
 
                 // -------------------------------------------------

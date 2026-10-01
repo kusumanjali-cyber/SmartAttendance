@@ -8,7 +8,6 @@
 
     <title>Smart Attendance | Register</title>
 
-
     <style>
 
         * {
@@ -122,6 +121,8 @@
 
         <form id="registerForm" action="RegisterServlet" method="POST">
 
+            <!-- NAME -->
+
             <label for="name">Name</label>
 
             <input
@@ -131,6 +132,9 @@
                 placeholder="Enter your name"
                 required
             >
+
+
+            <!-- EMAIL -->
 
             <label for="email">Email</label>
 
@@ -142,6 +146,9 @@
                 required
             >
 
+
+            <!-- PASSWORD -->
+
             <label for="password">Password</label>
 
             <input
@@ -151,6 +158,9 @@
                 placeholder="Enter your password"
                 required
             >
+
+
+            <!-- ROLE -->
 
             <label for="role">Role</label>
 
@@ -167,15 +177,13 @@
             </select>
 
 
-
-
-            <!-- ==============================
-                 STUDENT FIELDS
-                 ============================== -->
+            <!-- STUDENT FIELDS -->
 
             <div id="studentFields" class="student-fields">
 
-                <label for="rollNumber">Registration Number</label>
+                <label for="rollNumber">
+                    Registration Number
+                </label>
 
                 <input
                     type="text"
@@ -184,7 +192,10 @@
                     placeholder="Enter registration number"
                 >
 
-                <label for="department">Department</label>
+
+                <label for="department">
+                    Department
+                </label>
 
                 <input
                     type="text"
@@ -193,23 +204,39 @@
                     placeholder="Enter department"
                 >
 
-                <label for="year">Year</label>
+
+                <label for="year">
+                    Year
+                </label>
 
                 <select id="year" name="year">
 
-                    <option value="">Select Year</option>
+                    <option value="">
+                        Select Year
+                    </option>
 
-                    <option value="1">1st Year</option>
+                    <option value="1">
+                        1st Year
+                    </option>
 
-                    <option value="2">2nd Year</option>
+                    <option value="2">
+                        2nd Year
+                    </option>
 
-                    <option value="3">3rd Year</option>
+                    <option value="3">
+                        3rd Year
+                    </option>
 
-                    <option value="4">4th Year</option>
+                    <option value="4">
+                        4th Year
+                    </option>
 
                 </select>
 
-                <label for="section">Section</label>
+
+                <label for="section">
+                    Section
+                </label>
 
                 <input
                     type="text"
@@ -221,92 +248,147 @@
             </div>
 
 
-            <button type="submit" id="registerButton">
+            <!-- REGISTER BUTTON -->
+             <!-- FACULTY FIELDS -->
 
+<div id="facultyFields" style="display:none;">
+
+    <label for="subject">
+        Subject
+    </label>
+
+    <input
+        type="text"
+        id="subject"
+        name="subject"
+        placeholder="Enter subject"
+    >
+
+</div>
+
+            <button
+                type="submit"
+                id="registerButton"
+            >
                 Register
-
             </button>
 
 
-            <div id="message" class="message"></div>
+            <div
+                id="message"
+                class="message"
+            ></div>
 
         </form>
 
     </div>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-<script>
-    emailjs.init("3om3V0_tb1ckVZWlS");
-</script>
-
-  <script>
-    /* ==============================
-       SHOW STUDENT / FACULTY FIELDS
-       ============================== */
-
-    var role = document.getElementById("role");
-
-    var studentFields =
-        document.getElementById("studentFields");
-
-    role.addEventListener("change", function () {
-
-    if (role.value === "STUDENT") {
-
-        studentFields.style.display = "block";
-
-    }
-
-    else {
-
-        studentFields.style.display = "none";
-
-    }
-
-});
 
 
-    /* ==============================
-       REGISTRATION + WELCOME EMAIL
-       ============================== */
-
-    var registerForm =
-        document.getElementById("registerForm");
-
-    var registerButton =
-        document.getElementById("registerButton");
-
-    var message =
-        document.getElementById("message");
 
 
-    registerForm.addEventListener("submit", async function (event) {
-      event.preventDefault();
-    registerButton.disabled = true;
-    registerButton.innerText = "Registering...";
-     try {
+    <!-- REGISTRATION SCRIPT -->
 
-    await emailjs.send(
-        "service_utrl2ct",
-        "template_g3ebs0w",
-        {
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value,
-            role: document.getElementById("role").value
-        }
-    );
+    <script>
 
-} catch (error) {
+        /* ==============================
+           ROLE CHANGE
+           ============================== */
 
-    console.log("Email error:", error);
+        var role =
+            document.getElementById("role");
+
+        var studentFields =
+            document.getElementById("studentFields");
+
+
+    
+        var facultyFields =
+    document.getElementById("facultyFields");
+
+
+        role.addEventListener("change", function () {
+
+            if (role.value === "STUDENT") {
+
+    studentFields.style.display = "block";
+    facultyFields.style.display = "none";
+
+} else if (role.value === "FACULTY") {
+
+    studentFields.style.display = "none";
+    facultyFields.style.display = "block";
+
+} else {
+
+    studentFields.style.display = "none";
+    facultyFields.style.display = "none";
 
 }
+        });
 
-// Registration should continue even if email fails
-registerForm.submit();
-});
 
-</script>
+        /* ==============================
+           REGISTRATION
+           ============================== */
+
+        var registerForm =
+            document.getElementById("registerForm");
+
+        var registerButton =
+            document.getElementById("registerButton");
+
+
+        registerForm.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                /* Validate the form first */
+
+                if (!registerForm.checkValidity()) {
+
+                    registerForm.reportValidity();
+
+                    return;
+
+                }
+
+
+                registerButton.disabled = true;
+
+                registerButton.innerText =
+                    "Registering...";
+
+
+
+
+                /*
+                 * Submit the original HTML form
+                 * directly to RegisterServlet.
+                 *
+                 * This sends all fields:
+                 *
+                 * name
+                 * email
+                 * password
+                 * role
+                 * rollNumber
+                 * department
+                 * year
+                 * section
+                 */
+
+                HTMLFormElement.prototype.submit.call(
+                    registerForm
+                );
+
+            }
+
+        );
+
+    </script>
 
 </body>
 

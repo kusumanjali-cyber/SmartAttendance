@@ -19,18 +19,24 @@ public class AuthFilter implements Filter {
 
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
-
         String path = uri.substring(contextPath.length());
 
-        // Public pages
+        // Public pages and required API endpoints
         boolean publicPage =
                 path.equals("/") ||
                 path.equals("/index.html") ||
                 path.equals("/home.html") ||
                 path.equals("/register.html") ||
                 path.equals("/login.html") ||
+                path.equals("/attendance.html") ||
                 path.equals("/RegisterServlet") ||
                 path.equals("/LoginServlet") ||
+
+                // Attendance APIs
+                path.equals("/FacultySubjectsServlet") ||
+                path.equals("/FacultyStudentsServlet") ||
+                path.equals("/FacultyMarkAttendanceServlet") ||
+
                 path.equals("/style.css") ||
                 path.equals("/script.js") ||
                 path.endsWith(".css") ||
@@ -52,7 +58,9 @@ public class AuthFilter implements Filter {
         boolean loggedIn =
                 session != null &&
                 session.getAttribute("userId") != null &&
-                Boolean.TRUE.equals(session.getAttribute("passwordVerified"));
+                Boolean.TRUE.equals(
+                        session.getAttribute("passwordVerified")
+                );
 
         if (loggedIn) {
             chain.doFilter(request, response);

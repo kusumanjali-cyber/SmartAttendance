@@ -10,17 +10,15 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 @WebServlet("/FacultyStudentsReportServlet")
 public class FacultyStudentsReportServlet extends HttpServlet {
 
-    private static final String DB_URL =
-            "jdbc:mysql://localhost:3306/smartattendance"
-            + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final long serialVersionUID = 1L;
 
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root123";
+    private static final String DB_URL = System.getenv("DB_URL");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -32,65 +30,84 @@ public class FacultyStudentsReportServlet extends HttpServlet {
 
         PrintWriter out = response.getWriter();
 
-        HttpSession session = request.getSession(false);
-
-        if (session == null || session.getAttribute("userId") == null) {
-            out.print("{\"success\":false,\"message\":\"Please login first\"}");
-            return;
-        }
-
         String branch = request.getParameter("branch");
         String section = request.getParameter("section");
         String year = request.getParameter("year");
 
-        if (branch == null || branch.trim().isEmpty()) {
-            out.print("{\"success\":false,\"message\":\"Branch is required\"}");
-            return;
-        }
+        boolean hasBranch =
+                branch != null && !branch.trim().isEmpty();
 
-        if (section == null || section.trim().isEmpty()) {
-            out.print("{\"success\":false,\"message\":\"Section is required\"}");
-            return;
-        }
+        boolean hasSection =
+                section != null && !section.trim().isEmpty();
 
-        StringBuilder sql = new StringBuilder();
-
-        sql.append("SELECT ");
-        sql.append("s.id, ");
-        sql.append("s.student_name, ");
-        sql.append("s.roll_number, ");
-        sql.append("s.email, ");
-        sql.append("s.department, ");
-        sql.append("s.section, ");
-        sql.append("s.year, ");
-
-        sql.append("COALESCE(SUM(ar.total_classes), 0) AS total_classes, ");
-        sql.append("COALESCE(SUM(ar.attended_classes), 0) AS attended_classes ");
-
-        sql.append("FROM students s ");
-
-        sql.append("LEFT JOIN attendance_records ar ");
-        sql.append("ON ar.student_id = s.id ");
-
-        sql.append("WHERE UPPER(TRIM(s.department)) = UPPER(TRIM(?)) ");
-        sql.append("AND UPPER(TRIM(s.section)) = UPPER(TRIM(?)) ");
-
-        boolean hasYear = year != null
+        boolean hasYear =
+                year != null
                 && !year.trim().isEmpty()
                 && !year.equalsIgnoreCase("All");
 
-        if (hasYear) {
-            sql.append("AND CAST(s.year AS CHAR) = ? ");
+        StringBuilder sql = new StringBuilder();
+
+        sql.append(
+            "SELECT " +
+            "s.id, " +
+            "s.student_name, " +
+            "s.roll_number, " +
+            "s.email, " +
+            "s.department, " +
+            "s.section, " +
+            "s.year, " +
+            "COALESCE(SUM(ar.total_classes),0) AS total_classes, " +
+            "COALESCE(SUM(ar.attended_classes),0) AS attended_classes " +
+            "FROM students s " +
+            "LEFT JOIN attendance_records ar " +
+            "ON ar.student_id = s.id "
+        );
+
+        boolean hasWhere = false;
+
+        if (hasBranch) {
+            sql.append(
+                "WHERE UPPER(TRIM(s.department)) = " +
+                "UPPER(TRIM(?)) "
+            );
+            hasWhere = true;
         }
 
-        sql.append("GROUP BY ");
-        sql.append("s.id, ");
-        sql.append("s.student_name, ");
-        sql.append("s.roll_number, ");
-        sql.append("s.email, ");
-        sql.append("s.department, ");
-        sql.append("s.section, ");
-        sql.append("s.year ");
+        if (hasSection) {
+            sql.append(
+                hasWhere ? "AND " : "WHERE "
+            );
+
+            sql.append(
+                "UPPER(TRIM(s.section)) = " +
+                "UPPER(TRIM(?)) "
+            );
+
+            hasWhere = true;
+        }
+
+        if (hasYear) {
+            sql.append(
+                hasWhere ? "AND " : "WHERE "
+            );
+
+            sql.append(
+                "CAST(s.year AS CHAR) = ? "
+            );
+
+            hasWhere = true;
+        }
+
+        sql.append(
+            "GROUP BY " +
+            "s.id, " +
+            "s.student_name, " +
+            "s.roll_number, " +
+            "s.email, " +
+            "s.department, " +
+            "s.section, " +
+            "s.year "
+        );
 
         sql.append("ORDER BY s.student_name ASC");
 
@@ -98,136 +115,225 @@ public class FacultyStudentsReportServlet extends HttpServlet {
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            Connection con = DriverManager.getConnection(
+            if (DB_URL == null ||
+                DB_USER == null ||
+                DB_PASSWORD == null) {
+
+                out.print(
+                    "{\"success\":false," +
+                    "\"message\":\"Database environment variables are missing\"}"
+                );
+
+                return;
+            }
+
+            try (
+                Connection con = DriverManager.getConnection(
                     DB_URL,
                     DB_USER,
                     DB_PASSWORD
-            );
+                );
 
-            PreparedStatement ps = con.prepareStatement(sql.toString());
+                PreparedStatement ps =
+                    con.prepareStatement(sql.toString())
+            ) {
 
-            ps.setString(1, branch.trim());
-            ps.setString(2, section.trim());
+                int parameterIndex = 1;
 
-            if (hasYear) {
-                ps.setString(3, year.trim());
+                if (hasBranch) {
+                    ps.setString(
+                        parameterIndex++,
+                        branch.trim()
+                    );
+                }
+
+                if (hasSection) {
+                    ps.setString(
+                        parameterIndex++,
+                        section.trim()
+                    );
+                }
+
+                if (hasYear) {
+                    ps.setString(
+                        parameterIndex++,
+                        year.trim()
+                    );
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    StringBuilder json =
+                        new StringBuilder();
+
+                    json.append("{");
+                    json.append("\"success\":true,");
+                    json.append("\"students\":[");
+
+                    boolean first = true;
+
+                    while (rs.next()) {
+
+                        if (!first) {
+                            json.append(",");
+                        }
+
+                        first = false;
+
+                        int studentId =
+                            rs.getInt("id");
+
+                        String studentName =
+                            rs.getString("student_name");
+
+                        String rollNumber =
+                            rs.getString("roll_number");
+
+                        String email =
+                            rs.getString("email");
+
+                        String department =
+                            rs.getString("department");
+
+                        String studentSection =
+                            rs.getString("section");
+
+                        String studentYear =
+                            rs.getString("year");
+
+                        int totalClasses =
+                            rs.getInt("total_classes");
+
+                        int attendedClasses =
+                            rs.getInt("attended_classes");
+
+                        int absentClasses =
+                            Math.max(
+                                0,
+                                totalClasses -
+                                attendedClasses
+                            );
+
+                        double percentage = 0.0;
+
+                        if (totalClasses > 0) {
+
+                            percentage =
+                                ((double) attendedClasses
+                                / totalClasses) * 100.0;
+                        }
+
+                        String status;
+
+                        if (totalClasses == 0) {
+                            status = "Not Marked";
+                        } else if (percentage >= 75.0) {
+                            status = "Good";
+                        } else {
+                            status = "Low";
+                        }
+
+                        json.append("{");
+
+                        json.append("\"id\":")
+                            .append(studentId)
+                            .append(",");
+
+                        json.append("\"studentName\":\"")
+                            .append(escape(studentName))
+                            .append("\",");
+
+                        json.append("\"name\":\"")
+                            .append(escape(studentName))
+                            .append("\",");
+
+                        json.append("\"rollNumber\":\"")
+                            .append(escape(rollNumber))
+                            .append("\",");
+
+                        json.append("\"email\":\"")
+                            .append(escape(email))
+                            .append("\",");
+
+                        json.append("\"department\":\"")
+                            .append(escape(department))
+                            .append("\",");
+
+                        json.append("\"section\":\"")
+                            .append(escape(studentSection))
+                            .append("\",");
+
+                        json.append("\"year\":\"")
+                            .append(escape(studentYear))
+                            .append("\",");
+
+                        json.append("\"totalClasses\":")
+                            .append(totalClasses)
+                            .append(",");
+
+                        json.append("\"total_classes\":")
+                            .append(totalClasses)
+                            .append(",");
+
+                        json.append("\"attendedClasses\":")
+                            .append(attendedClasses)
+                            .append(",");
+
+                        json.append("\"attended_classes\":")
+                            .append(attendedClasses)
+                            .append(",");
+
+                        json.append("\"absentClasses\":")
+                            .append(absentClasses)
+                            .append(",");
+
+                        json.append("\"absent_classes\":")
+                            .append(absentClasses)
+                            .append(",");
+
+                        json.append("\"attendancePercentage\":")
+                            .append(String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                percentage
+                            ))
+                            .append(",");
+
+                        json.append("\"attendance_percentage\":")
+                            .append(String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                percentage
+                            ))
+                            .append(",");
+
+                        json.append("\"status\":\"")
+                            .append(status)
+                            .append("\"");
+
+                        json.append("}");
+                    }
+
+                    json.append("]");
+                    json.append("}");
+
+                    out.print(json.toString());
+                }
             }
-
-            ResultSet rs = ps.executeQuery();
-
-            StringBuilder json = new StringBuilder();
-
-            json.append("{");
-            json.append("\"success\":true,");
-            json.append("\"students\":[");
-
-            boolean first = true;
-
-            while (rs.next()) {
-
-                if (!first) {
-                    json.append(",");
-                }
-
-                first = false;
-
-                int studentId = rs.getInt("id");
-
-                String studentName = rs.getString("student_name");
-                String rollNumber = rs.getString("roll_number");
-                String email = rs.getString("email");
-                String department = rs.getString("department");
-                String studentSection = rs.getString("section");
-                String studentYear = rs.getString("year");
-
-                int totalClasses = rs.getInt("total_classes");
-                int attendedClasses = rs.getInt("attended_classes");
-
-                double percentage = 0.0;
-
-                if (totalClasses > 0) {
-                    percentage =
-                            ((double) attendedClasses / totalClasses) * 100.0;
-                }
-
-                String status;
-
-                if (percentage >= 75.0) {
-                    status = "Good";
-                } else {
-                    status = "Low";
-                }
-
-                json.append("{");
-
-                json.append("\"id\":")
-                    .append(studentId)
-                    .append(",");
-
-                json.append("\"studentName\":\"")
-                    .append(escape(studentName))
-                    .append("\",");
-
-                json.append("\"rollNumber\":\"")
-                    .append(escape(rollNumber))
-                    .append("\",");
-
-                json.append("\"email\":\"")
-                    .append(escape(email))
-                    .append("\",");
-
-                json.append("\"department\":\"")
-                    .append(escape(department))
-                    .append("\",");
-
-                json.append("\"section\":\"")
-                    .append(escape(studentSection))
-                    .append("\",");
-
-                json.append("\"year\":\"")
-                    .append(escape(studentYear))
-                    .append("\",");
-
-                json.append("\"totalClasses\":")
-                    .append(totalClasses)
-                    .append(",");
-
-                json.append("\"attendedClasses\":")
-                    .append(attendedClasses)
-                    .append(",");
-
-                json.append("\"attendancePercentage\":")
-                    .append(String.format(
-                            java.util.Locale.US,
-                            "%.2f",
-                            percentage
-                    ))
-                    .append(",");
-
-                json.append("\"status\":\"")
-                    .append(status)
-                    .append("\"");
-
-                json.append("}");
-            }
-
-            json.append("]");
-            json.append("}");
-
-            out.print(json.toString());
-
-            rs.close();
-            ps.close();
-            con.close();
 
         } catch (Exception e) {
 
             e.printStackTrace();
 
             out.print(
-                "{\"success\":false,\"message\":\""
-                + escape(e.getMessage())
-                + "\"}"
+                "{\"success\":false," +
+                "\"message\":\"" +
+                escape(
+                    e.getMessage() == null
+                    ? "Database error"
+                    : e.getMessage()
+                ) +
+                "\"}"
             );
         }
     }
@@ -239,10 +345,10 @@ public class FacultyStudentsReportServlet extends HttpServlet {
         }
 
         return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\r", "\\r")
-                .replace("\n", "\\n")
-                .replace("\t", "\\t");
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+            .replace("\t", "\\t");
     }
 }

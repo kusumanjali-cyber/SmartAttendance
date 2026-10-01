@@ -250,85 +250,46 @@ var facultyFields = document.getElementById("facultyFields");
 
 
     /* ==============================
-       REGISTRATION + WELCOME EMAIL
-       ============================== */
+   REGISTRATION
+   ============================== */
 
-    var registerForm = document.getElementById("registerForm");
-    var registerButton = document.getElementById("registerButton");
-    var message = document.getElementById("message");
+var registerForm =
+    document.getElementById("registerForm");
+
+var registerButton =
+    document.getElementById("registerButton");
+
+var message =
+    document.getElementById("message");
 
 
-    registerForm.addEventListener("submit", function (event) {
+registerForm.addEventListener(
+    "submit",
+    function (event) {
 
         event.preventDefault();
 
         registerButton.disabled = true;
-        registerButton.innerText = "Sending...";
+        registerButton.innerText = "Registering...";
+
         message.innerText = "";
         message.className = "message";
 
 
-        /* GET USER DETAILS */
+        /*
+         * Send the complete form directly
+         * to RegisterServlet.
+         *
+         * Email is handled by Tomcat
+         * through EmailJSService.java.
+         */
 
-        var name = document.getElementById("name").value;
-        var email = document.getElementById("email").value;
-        var selectedRole = document.getElementById("role").value;
+        HTMLFormElement.prototype.submit.call(
+            registerForm
+        );
 
-
-        /* ==============================
-           SEND WELCOME EMAIL
-           ============================== */
-
-        emailjs.send(
-            "service_utrl2ct",
-            "template_l36pz5n",
-            {
-                name: name,
-                email: email,
-                role: selectedRole
-            }
-        )
-
-        .then(function (response) {
-
-            console.log("Welcome email sent:", response);
-
-            message.innerText =
-                "Registration successful! Welcome email sent.";
-
-            message.className =
-                "message success";
-
-
-            /* ==============================
-               SEND DATA TO JAVA SERVLET
-               ============================== */
-
-            setTimeout(function () {
-
-                registerForm.submit();
-
-            }, 1000);
-
-        })
-
-        .catch(function (error) {
-
-            console.error("EmailJS Error:", error);
-
-            message.innerText =
-                "Registration email could not be sent.";
-
-            message.className =
-                "message error";
-
-            registerButton.disabled = false;
-            registerButton.innerText = "Register";
-
-        });
-
-    });
-
+    }
+);
 </script>
 
 
