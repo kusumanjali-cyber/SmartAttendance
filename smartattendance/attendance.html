@@ -271,18 +271,27 @@
             </div>
 
             <div class="field">
-                <label for="branch">Branch</label>
-                <select id="branch">
-                    <option value="">Select Branch</option>
-                </select>
-            </div>
+    <label for="branch">Branch</label>
+    <select id="branch">
+        <option value="">Select Branch</option>
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="EEE">EEE</option>
+        <option value="MECH">MECH</option>
+        <option value="CIVIL">CIVIL</option>
+        <option value="IT">IT</option>
+    </select>
+</div>
 
             <div class="field">
-                <label for="section">Section</label>
-                <select id="section">
-                    <option value="">Select Section</option>
-                </select>
-            </div>
+    <label for="section">Section</label>
+    <select id="section">
+        <option value="">Select Section</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
+</div>
 
         </div>
 
@@ -365,9 +374,6 @@ document.addEventListener("DOMContentLoaded", function () {
     dateInput.value = `${yyyy}-${mm}-${dd}`;
 
     loadSubjects();
-
-    setupBranches();
-    setupSections();
 });
 
 
