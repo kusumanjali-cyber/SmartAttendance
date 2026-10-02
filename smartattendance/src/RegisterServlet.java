@@ -35,6 +35,49 @@ public class RegisterServlet extends HttpServlet {
 
         return value.trim();
     }
+    private String normalizeDbUrl(String value) throws ServletException {
+
+    if (value == null || value.trim().isEmpty()) {
+        throw new ServletException("DB_URL is missing.");
+    }
+
+    String url = value.trim();
+
+    // Remove accidental surrounding quotes
+    if (url.length() >= 2 &&
+        ((url.startsWith("\"") && url.endsWith("\"")) ||
+         (url.startsWith("'") && url.endsWith("'")))) {
+
+        url = url.substring(1, url.length() - 1).trim();
+    }
+
+    // Remove accidental trailing semicolon
+    while (url.endsWith(";")) {
+        url = url.substring(0, url.length() - 1).trim();
+    }
+
+    // Check JDBC URL
+    if (!url.startsWith("jdbc:mysql://")) {
+        throw new ServletException(
+            "DB_URL must start with jdbc:mysql://"
+        );
+    }
+
+    // Remove existing parameters
+    int queryIndex = url.indexOf('?');
+
+    if (queryIndex >= 0) {
+        url = url.substring(0, queryIndex).trim();
+    }
+
+    // Remove trailing slash
+    while (url.endsWith("/")) {
+        url = url.substring(0, url.length() - 1);
+    }
+
+    // Add correct MySQL SSL parameter
+    return url + "?sslMode=REQUIRED";
+}
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -48,18 +91,30 @@ public class RegisterServlet extends HttpServlet {
          * DATABASE ENVIRONMENT VARIABLES
          * =================================================
          */
-        String dbUrl = getRequiredEnv("DB_URL");
-        String dbUser = getRequiredEnv("DB_USER");
-        String dbPassword = getRequiredEnv("DB_PASSWORD");
+        
+        String dbHost = getRequiredEnv("DB_HOST");
+String dbPort = getRequiredEnv("DB_PORT");
+String dbName = getRequiredEnv("DB_NAME");
+String dbUser = getRequiredEnv("DB_USER");
+String dbPassword = getRequiredEnv("DB_PASSWORD");
 
-        if (dbUrl == null ||
-            dbUser == null ||
-            dbPassword == null) {
+if (dbHost == null ||
+    dbPort == null ||
+    dbName == null ||
+    dbUser == null ||
+    dbPassword == null) {
 
-            throw new ServletException(
-                    "Database environment variables are missing."
-            );
-        }
+    throw new ServletException(
+            "Database environment variables are missing."
+    );
+}
+
+String dbUrl =
+        "jdbc:mysql://" +
+        dbHost + ":" +
+        dbPort + "/" +
+        dbName +
+        "?sslMode=REQUIRED";
 
         System.out.println("========== REGISTER DATABASE ==========");
         System.out.println("DB URL  : " + dbUrl);
