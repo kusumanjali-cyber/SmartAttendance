@@ -17,10 +17,14 @@ public class RegisterServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // =========================================================
-    // GET REQUIRED ENVIRONMENT VARIABLE
-    // =========================================================
-
+    /*
+     * =====================================================
+     * DATABASE CONFIGURATION
+     * =====================================================
+     *
+     * DB_URL must contain the COMPLETE JDBC URL.
+     * We do NOT add "jdbc:mysql://" again.
+     */
     private String getRequiredEnv(String key) {
 
         String value = System.getenv(key);
@@ -31,30 +35,97 @@ public class RegisterServlet extends HttpServlet {
 
         return value.trim();
     }
+    private String normalizeDbUrl(String value) throws ServletException {
 
-    // =========================================================
-    // POST
-    // =========================================================
+    if (value == null || value.trim().isEmpty()) {
+        throw new ServletException("DB_URL is missing.");
+    }
+
+    String url = value.trim();
+
+    // Remove accidental surrounding quotes
+    if (url.length() >= 2 &&
+        ((url.startsWith("\"") && url.endsWith("\"")) ||
+         (url.startsWith("'") && url.endsWith("'")))) {
+
+        url = url.substring(1, url.length() - 1).trim();
+    }
+
+    // Remove accidental trailing semicolon
+    while (url.endsWith(";")) {
+        url = url.substring(0, url.length() - 1).trim();
+    }
+
+    // Check JDBC URL
+    if (!url.startsWith("jdbc:mysql://")) {
+        throw new ServletException(
+            "DB_URL must start with jdbc:mysql://"
+        );
+    }
+
+    // Remove existing parameters
+    int queryIndex = url.indexOf('?');
+
+    if (queryIndex >= 0) {
+        url = url.substring(0, queryIndex).trim();
+    }
+
+    // Remove trailing slash
+    while (url.endsWith("/")) {
+        url = url.substring(0, url.length() - 1);
+    }
+
+    // Add correct MySQL SSL parameter
+    return url + "?sslMode=REQUIRED";
+}
 
     @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doPost(HttpServletRequest request,
+                           HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
 
-        // =====================================================
-        // DATABASE ENVIRONMENT VARIABLES
-        // =====================================================
+        /*
+         * =================================================
+         * DATABASE ENVIRONMENT VARIABLES
+         * =================================================
+         */
+        
+        String dbHost = getRequiredEnv("DB_HOST");
+String dbPort = getRequiredEnv("DB_PORT");
+String dbName = getRequiredEnv("DB_NAME");
+String dbUser = getRequiredEnv("DB_USER");
+String dbPassword = getRequiredEnv("DB_PASSWORD");
 
-        String dbUrl = "jdbc:mysql://" + getRequiredEnv("DB_URL");
-        String dbUser = getRequiredEnv("DB_USER");
-        String dbPassword = getRequiredEnv("DB_PASSWORD");
+if (dbHost == null ||
+    dbPort == null ||
+    dbName == null ||
+    dbUser == null ||
+    dbPassword == null) {
 
-        // =====================================================
-        // FORM VALUES
-        // =====================================================
+    throw new ServletException(
+            "Database environment variables are missing."
+    );
+}
+
+String dbUrl =
+        "jdbc:mysql://" +
+        dbHost + ":" +
+        dbPort + "/" +
+        dbName +
+        "?sslMode=REQUIRED";
+
+        System.out.println("========== REGISTER DATABASE ==========");
+        System.out.println("DB URL  : " + dbUrl);
+        System.out.println("DB USER : " + dbUser);
+        System.out.println("=======================================");
+
+        /*
+         * =================================================
+         * GET FORM DATA
+         * =================================================
+         */
 
         String name = request.getParameter("name");
         String email = request.getParameter("email");
@@ -65,19 +136,31 @@ public class RegisterServlet extends HttpServlet {
         String department = request.getParameter("department");
         String section = request.getParameter("section");
         String yearValue = request.getParameter("year");
+        String subject = request.getParameter("subject");
+         System.out.println("========== REGISTER FORM DATA ==========");
+System.out.println("name       = [" + name + "]");
+System.out.println("email      = [" + email + "]");
+System.out.println("password   = [" + (password == null ? "NULL" : "***") + "]");
+System.out.println("role       = [" + role + "]");
+System.out.println("rollNumber = [" + rollNumber + "]");
+System.out.println("department = [" + department + "]");
+System.out.println("section    = [" + section + "]");
+System.out.println("year       = [" + yearValue + "]");
+System.out.println("========================================");
+        /*
+         * =================================================
+         * BASIC VALIDATION
+         * =================================================
+         */
 
-        // =====================================================
-        // BASIC VALIDATION
-        // =====================================================
-
-        if (name == null
-                || email == null
-                || password == null
-                || role == null
-                || name.trim().isEmpty()
-                || email.trim().isEmpty()
-                || password.trim().isEmpty()
-                || role.trim().isEmpty()) {
+        if (name == null ||
+            email == null ||
+            password == null ||
+            role == null ||
+            name.trim().isEmpty() ||
+            email.trim().isEmpty() ||
+            password.trim().isEmpty() ||
+            role.trim().isEmpty()) {
 
             response.sendRedirect("register.html?error=missing");
             return;
@@ -88,32 +171,36 @@ public class RegisterServlet extends HttpServlet {
         password = password.trim();
         role = role.trim().toUpperCase();
 
-        // =====================================================
-        // ROLE VALIDATION
-        // =====================================================
+        /*
+         * =================================================
+         * ROLE VALIDATION
+         * =================================================
+         */
 
-        if (!role.equals("STUDENT")
-                && !role.equals("FACULTY")
-                && !role.equals("ADMIN")) {
+        if (!role.equals("STUDENT") &&
+            !role.equals("FACULTY") &&
+            !role.equals("ADMIN")) {
 
             response.sendRedirect("register.html?error=invalidrole");
             return;
         }
 
-        // =====================================================
-        // STUDENT DETAILS
-        // =====================================================
+        /*
+         * =================================================
+         * STUDENT DETAILS
+         * =================================================
+         */
 
         int year = 1;
 
         if ("STUDENT".equals(role)) {
 
-            if (rollNumber == null
-                    || department == null
-                    || section == null
-                    || rollNumber.trim().isEmpty()
-                    || department.trim().isEmpty()
-                    || section.trim().isEmpty()) {
+            if (rollNumber == null ||
+                department == null ||
+                section == null ||
+                rollNumber.trim().isEmpty() ||
+                department.trim().isEmpty() ||
+                section.trim().isEmpty()) {
 
                 response.sendRedirect("register.html?error=missing");
                 return;
@@ -123,12 +210,14 @@ public class RegisterServlet extends HttpServlet {
             department = department.trim();
             section = section.trim();
 
-            if (yearValue != null
-                    && !yearValue.trim().isEmpty()) {
+            if (yearValue != null &&
+                !yearValue.trim().isEmpty()) {
 
                 try {
 
-                    year = Integer.parseInt(yearValue.trim());
+                    year = Integer.parseInt(
+                            yearValue.trim()
+                    );
 
                 } catch (NumberFormatException e) {
 
@@ -150,9 +239,26 @@ public class RegisterServlet extends HttpServlet {
             }
         }
 
-        // =====================================================
-        // DATABASE CONNECTION
-        // =====================================================
+        /*
+         * =================================================
+         * FACULTY DETAILS
+         * =================================================
+         */
+
+        if ("FACULTY".equals(role)) {
+
+            if (subject == null ||
+                subject.trim().isEmpty()) {
+
+                response.sendRedirect(
+                        "register.html?error=missing"
+                );
+
+                return;
+            }
+
+            subject = subject.trim();
+        }
 
         Connection con = null;
         PreparedStatement insertUser = null;
@@ -161,38 +267,23 @@ public class RegisterServlet extends HttpServlet {
 
         try {
 
-            // =================================================
-            // CHECK DATABASE VARIABLES
-            // =================================================
-
-            if (dbUrl == null
-                    || dbUser == null
-                    || dbPassword == null) {
-
-                throw new ServletException(
-                        "Database environment variables are missing."
-                );
-            }
-
-            // =================================================
-            // SAFE LOG
-            // =================================================
-
-            System.out.println("====================================");
-            System.out.println("DATABASE CONNECTION START");
-            System.out.println("DB URL  : " + dbUrl);
-            System.out.println("DB USER : " + dbUser);
-            System.out.println("====================================");
-
-            // =================================================
-            // MYSQL DRIVER
-            // =================================================
+            /*
+             * =============================================
+             * LOAD MYSQL DRIVER
+             * =============================================
+             */
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // =================================================
-            // CONNECT
-            // =================================================
+            /*
+             * =============================================
+             * DATABASE CONNECTION
+             * =============================================
+             *
+             * IMPORTANT:
+             * dbUrl is already the COMPLETE JDBC URL.
+             * Do not add jdbc:mysql:// here.
+             */
 
             con = DriverManager.getConnection(
                     dbUrl,
@@ -200,20 +291,18 @@ public class RegisterServlet extends HttpServlet {
                     dbPassword
             );
 
-            System.out.println(
-                    "DATABASE CONNECTION SUCCESS"
-            );
-
             con.setAutoCommit(false);
 
-            // =================================================
-            // INSERT USER
-            // =================================================
+            /*
+             * =============================================
+             * INSERT USER
+             * =============================================
+             */
 
             String insertUserSQL =
-                    "INSERT INTO users "
-                    + "(name, username, password, role) "
-                    + "VALUES (?, ?, ?, ?)";
+                "INSERT INTO users "
+                + "(name, username, password, role, subject) "
+                + "VALUES (?, ?, ?, ?, ?)";
 
             insertUser = con.prepareStatement(
                     insertUserSQL,
@@ -224,6 +313,13 @@ public class RegisterServlet extends HttpServlet {
             insertUser.setString(2, email);
             insertUser.setString(3, password);
             insertUser.setString(4, role);
+
+            insertUser.setString(
+                    5,
+                    "FACULTY".equals(role)
+                            ? subject
+                            : null
+            );
 
             int userCount =
                     insertUser.executeUpdate();
@@ -239,9 +335,11 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            // =================================================
-            // GET USER ID
-            // =================================================
+            /*
+             * =============================================
+             * GET GENERATED USER ID
+             * =============================================
+             */
 
             generatedKeys =
                     insertUser.getGeneratedKeys();
@@ -249,9 +347,7 @@ public class RegisterServlet extends HttpServlet {
             int userId = 0;
 
             if (generatedKeys.next()) {
-
-                userId =
-                        generatedKeys.getInt(1);
+                userId = generatedKeys.getInt(1);
             }
 
             if (userId <= 0) {
@@ -265,17 +361,20 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            // =================================================
-            // INSERT STUDENT
-            // =================================================
+            /*
+             * =============================================
+             * INSERT STUDENT DETAILS
+             * ONLY FOR STUDENT
+             * =============================================
+             */
 
             if ("STUDENT".equals(role)) {
 
                 String studentSQL =
-                        "INSERT INTO students "
-                        + "(student_name, roll_number, email, "
-                        + "department, section, year) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO students "
+        + "(student_name, roll_number, email, "
+        + "department, section, year, user_id) "
+        + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
                 insertStudent =
                         con.prepareStatement(studentSQL);
@@ -306,9 +405,14 @@ public class RegisterServlet extends HttpServlet {
                 );
 
                 insertStudent.setInt(
-                        6,
-                        year
-                );
+        6,
+        year
+);
+
+insertStudent.setInt(
+        7,
+        userId
+);
 
                 int studentCount =
                         insertStudent.executeUpdate();
@@ -325,23 +429,55 @@ public class RegisterServlet extends HttpServlet {
                 }
             }
 
-            // =================================================
-            // COMMIT
-            // =================================================
+            /*
+             * =============================================
+             * COMMIT
+             * =============================================
+             */
 
             con.commit();
 
-            System.out.println("====================================");
-            System.out.println("REGISTRATION SUCCESS");
-            System.out.println("User ID : " + userId);
-            System.out.println("Name    : " + name);
-            System.out.println("Email   : " + email);
-            System.out.println("Role    : " + role);
-            System.out.println("====================================");
+            /*
+             * =============================================
+             * SEND REGISTRATION EMAIL USING EMAILJS
+             * =============================================
+             */
 
-            // =================================================
-            // SESSION
-            // =================================================
+            if ("STUDENT".equals(role) ||
+                "FACULTY".equals(role)) {
+
+                boolean emailSent =
+                        EmailJSService.sendRegistrationEmail(
+                                email,
+                                name,
+                                role
+                        );
+            System.out.println("========== REGISTRATION EMAIL ==========");
+System.out.println("Email       : " + email);
+System.out.println("Name        : " + name);
+System.out.println("Role        : " + role);
+System.out.println("Email Sent  : " + emailSent);
+System.out.println("=========================================");
+
+                if (emailSent) {
+
+                    System.out.println(
+                            "Registration email sent successfully."
+                    );
+
+                } else {
+
+                    System.out.println(
+                            "Registration email failed."
+                    );
+                }
+            }
+
+            /*
+             * =============================================
+             * CREATE SESSION
+             * =============================================
+             */
 
             HttpSession session =
                     request.getSession(true);
@@ -376,9 +512,11 @@ public class RegisterServlet extends HttpServlet {
                     true
             );
 
-            // =================================================
-            // ROLE DASHBOARD
-            // =================================================
+            /*
+             * =============================================
+             * DIRECT DASHBOARD
+             * =============================================
+             */
 
             if ("STUDENT".equals(role)) {
 
@@ -407,7 +545,15 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            response.sendRedirect("login.html");
+            /*
+             * =============================================
+             * FALLBACK
+             * =============================================
+             */
+
+            response.sendRedirect(
+                    "login.html"
+            );
 
         } catch (Exception e) {
 
@@ -421,24 +567,17 @@ public class RegisterServlet extends HttpServlet {
                 }
             }
 
+            /*
+             * =============================================
+             * SHOW REAL DATABASE ERROR
+             * =============================================
+             */
+
             System.out.println(
                     "========== REGISTER ERROR =========="
             );
 
-            System.out.println(
-                    "ERROR TYPE : "
-                    + e.getClass().getName()
-            );
-
-            System.out.println(
-                    "ERROR MSG  : "
-                    + e.getMessage()
-            );
-
-            System.out.println(
-                    "DB USER    : "
-                    + dbUser
-            );
+            e.printStackTrace();
 
             System.out.println(
                     "===================================="
@@ -470,6 +609,12 @@ public class RegisterServlet extends HttpServlet {
 
         } finally {
 
+            /*
+             * =============================================
+             * CLOSE GENERATED KEYS
+             * =============================================
+             */
+
             try {
 
                 if (generatedKeys != null) {
@@ -478,6 +623,12 @@ public class RegisterServlet extends HttpServlet {
 
             } catch (Exception ignored) {
             }
+
+            /*
+             * =============================================
+             * CLOSE STUDENT STATEMENT
+             * =============================================
+             */
 
             try {
 
@@ -488,6 +639,12 @@ public class RegisterServlet extends HttpServlet {
             } catch (Exception ignored) {
             }
 
+            /*
+             * =============================================
+             * CLOSE USER STATEMENT
+             * =============================================
+             */
+
             try {
 
                 if (insertUser != null) {
@@ -496,6 +653,12 @@ public class RegisterServlet extends HttpServlet {
 
             } catch (Exception ignored) {
             }
+
+            /*
+             * =============================================
+             * CLOSE CONNECTION
+             * =============================================
+             */
 
             try {
 
