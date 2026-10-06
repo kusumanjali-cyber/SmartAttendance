@@ -480,7 +480,9 @@
 
         const errorBox = document.getElementById("errorMessage");
 
+        // Never show technical server errors to students
         errorBox.style.display = "none";
+        errorBox.textContent = "";
 
         try {
 
@@ -491,15 +493,14 @@
             });
 
             if (!response.ok) {
-                throw new Error("Server error: " + response.status);
+                throw new Error("Attendance data unavailable");
             }
 
             const data = await response.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Unable to load attendance.");
+                throw new Error("Attendance data unavailable");
             }
-
 
             const percentage =
                 Number(data.percentage || 0);
@@ -516,12 +517,19 @@
             const needed =
                 Number(data.neededClasses || 0);
 
+            /* STUDENT NAME */
 
-            document.getElementById("studentName").textContent =
+            const studentName =
                 data.studentName || "Student";
 
+            document.getElementById("studentName").textContent =
+                studentName;
+
             document.getElementById("welcomeText").textContent =
-                "Welcome, " + (data.studentName || "Student");
+                "Welcome, " + studentName;
+
+
+            /* ATTENDANCE */
 
             document.getElementById("percentage").textContent =
                 percentage.toFixed(2) + "%";
@@ -554,7 +562,9 @@
                 status.style.background = "#f1f5f9";
                 status.style.color = "#64748b";
 
-            } else if (percentage >= 75) {
+            }
+
+            else if (percentage >= 75) {
 
                 targetMessage.textContent =
                     "Your attendance is at or above the required 75%.";
@@ -565,7 +575,9 @@
                 status.style.background = "#eaf9f1";
                 status.style.color = "#18794e";
 
-            } else {
+            }
+
+            else {
 
                 targetMessage.textContent =
                     "You need to attend " +
@@ -581,14 +593,14 @@
                 status.style.color = "#a45a00";
             }
 
-        } catch (error) {
+        }
 
-            console.error(error);
+        catch (error) {
 
-            errorBox.textContent =
-                error.message || "Unable to load attendance.";
+            // Keep technical error only in browser console
+            console.error("Attendance loading failed:", error);
 
-            errorBox.style.display = "block";
+            // Do NOT show "Server error: 500" to the student
 
             document.getElementById("targetMessage").textContent =
                 "Unable to load attendance information.";
@@ -596,6 +608,17 @@
             document.getElementById("attendanceStatus").textContent =
                 "Please try again.";
 
+            document.getElementById("percentage").textContent =
+                "--%";
+
+            document.getElementById("totalClasses").textContent =
+                "0";
+
+            document.getElementById("attendedClasses").textContent =
+                "0";
+
+            document.getElementById("absentClasses").textContent =
+                "0";
         }
     }
 
