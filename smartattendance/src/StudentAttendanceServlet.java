@@ -17,31 +17,22 @@ public class StudentAttendanceServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_HOST =
-        System.getenv("DB_HOST");
+    private static final String DB_HOST = System.getenv("DB_HOST");
+    private static final String DB_PORT = System.getenv("DB_PORT");
+    private static final String DB_NAME = System.getenv("DB_NAME");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
-private static final String DB_PORT =
-        System.getenv("DB_PORT");
-
-private static final String DB_NAME =
-        System.getenv("DB_NAME");
-
-private static final String DB_USER =
-        System.getenv("DB_USER");
-
-private static final String DB_PASSWORD =
-        System.getenv("DB_PASSWORD");
-
-private static final String DB_URL =
-        "jdbc:mysql://" +
-        DB_HOST + ":" +
-        DB_PORT + "/" +
-        DB_NAME +
-        "?sslMode=REQUIRED";
+    private static final String DB_URL =
+            "jdbc:mysql://" +
+            DB_HOST + ":" +
+            DB_PORT + "/" +
+            DB_NAME +
+            "?sslMode=REQUIRED";
 
     @Override
     protected void doGet(HttpServletRequest request,
-                          HttpServletResponse response)
+                         HttpServletResponse response)
             throws ServletException, IOException {
 
         response.setContentType("application/json");
@@ -51,209 +42,287 @@ private static final String DB_URL =
 
         HttpSession session = request.getSession(false);
 
+        if (session == null) {
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Please login first");
+            return;
+        }
+
+        Object usernameObj = session.getAttribute("username");
+
+        if (usernameObj == null) {
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Please login first");
+            return;
+        }
+
+        String username = String.valueOf(usernameObj).trim();
+
+        if (username.isEmpty()) {
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Please login first");
+            return;
+        }
+
         /*
-         * Student must be logged in.
+         * Check database configuration.
          */
-        if (session == null
-                || session.getAttribute("username") == null
-                || session.getAttribute("passwordVerified") == null) {
+        if (DB_HOST == null || DB_HOST.trim().isEmpty()
+                || DB_PORT == null || DB_PORT.trim().isEmpty()
+                || DB_NAME == null || DB_NAME.trim().isEmpty()
+                || DB_USER == null || DB_USER.trim().isEmpty()
+                || DB_PASSWORD == null || DB_PASSWORD.trim().isEmpty()) {
 
-            response.setStatus(
-                    HttpServletResponse.SC_UNAUTHORIZED
+            System.err.println(
+                    "StudentAttendanceServlet: Database environment variables are missing."
             );
 
-            out.print(
-                    "{\"success\":false,"
-                    + "\"message\":\"Please login first\"}"
-            );
+            sendError(response,
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Database configuration is missing");
 
             return;
         }
 
-        String username =
-                String.valueOf(
-                        session.getAttribute("username")
-                );
-
-        /*
-         * IMPORTANT:
-         * Students are linked to users through students.user_id.
-         * Do not match using email.
-         */
-        String sql =
-                "SELECT "
-                + "s.id, "
-                + "s.student_name, "
-                + "COALESCE(SUM(ar.total_classes), 0) AS total_classes, "
-                + "COALESCE(SUM(ar.attended_classes), 0) AS attended_classes "
-                + "FROM users u "
-                + "INNER JOIN students s "
-                + "ON s.user_id = u.id "
-                + "LEFT JOIN attendance_records ar "
-                + "ON ar.student_id = s.id "
-                + "WHERE LOWER(TRIM(u.username)) = LOWER(TRIM(?)) "
-                + "AND UPPER(TRIM(u.role)) = 'STUDENT' "
-                + "GROUP BY s.id, s.student_name";
-
         try {
-
-            if (DB_URL == null
-                    || DB_USER == null
-                    || DB_PASSWORD == null) {
-
-                response.setStatus(
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-                );
-
-                out.print(
-                        "{\"success\":false,"
-                        + "\"message\":\"Database configuration is missing\"}"
-                );
-
-                return;
-            }
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (
-                Connection con =
-                        DriverManager.getConnection(
-                                DB_URL,
-                                DB_USER,
-                                DB_PASSWORD
-                        );
+            try (Connection con = DriverManager.getConnection(
+                    DB_URL,
+                    DB_USER,
+                    DB_PASSWORD)) {
 
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-            ) {
+                /*
+                 * First find the student through users -> students.
+                 *
+                 * This does NOT depend on email.
+                 */
+                String studentSql =
+                        "SELECT s.id, s.student_name " +
+                        "FROM users u " +
+                        "INNER JOIN students s ON s.user_id = u.id " +
+                        "WHERE LOWER(TRIM(u.username)) = LOWER(TRIM(?)) " +
+                        "AND UPPER(TRIM(u.role)) = 'STUDENT' " +
+                        "LIMIT 1";
 
-                ps.setString(1, username);
+                int studentId = -1;
+                String studentName = null;
 
-                try (ResultSet rs = ps.executeQuery()) {
+                try (PreparedStatement ps =
+                             con.prepareStatement(studentSql)) {
 
-                    if (!rs.next()) {
+                    ps.setString(1, username);
 
-                        response.setStatus(
-                                HttpServletResponse.SC_NOT_FOUND
-                        );
+                    try (ResultSet rs = ps.executeQuery()) {
 
-                        out.print(
-                                "{\"success\":false,"
-                                + "\"message\":\"Student record not found\"}"
-                        );
+                        if (rs.next()) {
 
-                        return;
-                    }
-
-                    int totalClasses =
-                            rs.getInt("total_classes");
-
-                    int attendedClasses =
-                            rs.getInt("attended_classes");
-
-                    /*
-                     * Safety checks.
-                     */
-                    if (totalClasses < 0) {
-                        totalClasses = 0;
-                    }
-
-                    if (attendedClasses < 0) {
-                        attendedClasses = 0;
-                    }
-
-                    if (attendedClasses > totalClasses) {
-                        attendedClasses = totalClasses;
-                    }
-
-                    int absentClasses =
-                            totalClasses - attendedClasses;
-
-                    double percentage = 0.0;
-
-                    if (totalClasses > 0) {
-
-                        percentage =
-                                ((double) attendedClasses
-                                / totalClasses) * 100.0;
-                    }
-
-                    /*
-                     * Calculate future classes needed
-                     * to reach 75% attendance.
-                     */
-                    int neededClasses = 0;
-
-                    if (percentage < 75.0
-                            && totalClasses > 0) {
-
-                        neededClasses =
-                                (3 * totalClasses)
-                                - (4 * attendedClasses);
-
-                        if (neededClasses < 0) {
-                            neededClasses = 0;
+                            studentId = rs.getInt("id");
+                            studentName = rs.getString("student_name");
                         }
                     }
-
-                    String studentName =
-                            rs.getString("student_name");
-
-                    StringBuilder json =
-                            new StringBuilder();
-
-                    json.append("{");
-
-                    json.append("\"success\":true,");
-
-                    json.append("\"studentName\":\"")
-                            .append(escapeJson(studentName))
-                            .append("\",");
-
-                    json.append("\"totalClasses\":")
-                            .append(totalClasses)
-                            .append(",");
-
-                    json.append("\"attendedClasses\":")
-                            .append(attendedClasses)
-                            .append(",");
-
-                    json.append("\"absentClasses\":")
-                            .append(absentClasses)
-                            .append(",");
-
-                    json.append("\"percentage\":")
-                            .append(
-                                    String.format(
-                                            java.util.Locale.US,
-                                            "%.2f",
-                                            percentage
-                                    )
-                            )
-                            .append(",");
-
-                    json.append("\"neededClasses\":")
-                            .append(neededClasses);
-
-                    json.append("}");
-
-                    out.print(json.toString());
                 }
+
+                /*
+                 * If username did not match, try the session email.
+                 * This helps when older registrations stored email
+                 * differently in users.username.
+                 */
+                if (studentId == -1) {
+
+                    Object emailObj = session.getAttribute("email");
+
+                    if (emailObj != null) {
+
+                        String email = String.valueOf(emailObj).trim();
+
+                        if (!email.isEmpty()) {
+
+                            String emailSql =
+                                    "SELECT s.id, s.student_name " +
+                                    "FROM users u " +
+                                    "INNER JOIN students s ON s.user_id = u.id " +
+                                    "WHERE LOWER(TRIM(u.username)) = LOWER(TRIM(?)) " +
+                                    "AND UPPER(TRIM(u.role)) = 'STUDENT' " +
+                                    "LIMIT 1";
+
+                            try (PreparedStatement ps =
+                                         con.prepareStatement(emailSql)) {
+
+                                ps.setString(1, email);
+
+                                try (ResultSet rs = ps.executeQuery()) {
+
+                                    if (rs.next()) {
+
+                                        studentId = rs.getInt("id");
+                                        studentName =
+                                                rs.getString("student_name");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (studentId == -1) {
+
+                    sendError(response,
+                            HttpServletResponse.SC_NOT_FOUND,
+                            "Student record not found");
+
+                    return;
+                }
+
+                /*
+                 * Get attendance separately.
+                 *
+                 * This avoids multiplying attendance rows through
+                 * joins with other tables.
+                 */
+                String attendanceSql =
+                        "SELECT " +
+                        "COALESCE(SUM(total_classes), 0) AS total_classes, " +
+                        "COALESCE(SUM(attended_classes), 0) AS attended_classes " +
+                        "FROM attendance_records " +
+                        "WHERE student_id = ?";
+
+                int totalClasses = 0;
+                int attendedClasses = 0;
+
+                try (PreparedStatement ps =
+                             con.prepareStatement(attendanceSql)) {
+
+                    ps.setInt(1, studentId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+
+                        if (rs.next()) {
+
+                            totalClasses =
+                                    rs.getInt("total_classes");
+
+                            attendedClasses =
+                                    rs.getInt("attended_classes");
+                        }
+                    }
+                }
+
+                /*
+                 * Safety checks.
+                 */
+                if (totalClasses < 0) {
+                    totalClasses = 0;
+                }
+
+                if (attendedClasses < 0) {
+                    attendedClasses = 0;
+                }
+
+                if (attendedClasses > totalClasses) {
+                    attendedClasses = totalClasses;
+                }
+
+                int absentClasses =
+                        totalClasses - attendedClasses;
+
+                double percentage = 0.0;
+
+                if (totalClasses > 0) {
+
+                    percentage =
+                            ((double) attendedClasses
+                                    / (double) totalClasses) * 100.0;
+                }
+
+                /*
+                 * Number of future classes required to reach 75%.
+                 *
+                 * (attended + x) / (total + x) >= 0.75
+                 *
+                 * x >= 3*total - 4*attended
+                 */
+                int neededClasses = 0;
+
+                if (percentage < 75.0) {
+
+                    neededClasses =
+                            (3 * totalClasses)
+                            - (4 * attendedClasses);
+
+                    if (neededClasses < 0) {
+                        neededClasses = 0;
+                    }
+                }
+
+                StringBuilder json =
+                        new StringBuilder();
+
+                json.append("{");
+
+                json.append("\"success\":true,");
+
+                json.append("\"studentName\":\"")
+                        .append(escapeJson(studentName))
+                        .append("\",");
+
+                json.append("\"totalClasses\":")
+                        .append(totalClasses)
+                        .append(",");
+
+                json.append("\"attendedClasses\":")
+                        .append(attendedClasses)
+                        .append(",");
+
+                json.append("\"absentClasses\":")
+                        .append(absentClasses)
+                        .append(",");
+
+                json.append("\"percentage\":")
+                        .append(String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                percentage))
+                        .append(",");
+
+                json.append("\"neededClasses\":")
+                        .append(neededClasses);
+
+                json.append("}");
+
+                out.print(json.toString());
             }
 
         } catch (Exception e) {
 
+            System.err.println(
+                    "StudentAttendanceServlet ERROR: "
+                    + e.getMessage()
+            );
+
             e.printStackTrace();
 
-            response.setStatus(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-            );
-
-            out.print(
-                    "{\"success\":false,"
-                    + "\"message\":\"Database error while loading attendance\"}"
+            sendError(
+                    response,
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Database error while loading attendance"
             );
         }
+    }
+
+    private void sendError(HttpServletResponse response,
+                           int status,
+                           String message)
+            throws IOException {
+
+        response.setStatus(status);
+
+        response.getWriter().print(
+                "{\"success\":false,\"message\":\""
+                        + escapeJson(message)
+                        + "\"}"
+        );
     }
 
     private String escapeJson(String value) {

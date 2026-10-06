@@ -92,15 +92,11 @@ public class RegisterServlet extends HttpServlet {
          * =================================================
          */
         
-        String dbHost = getRequiredEnv("DB_HOST");
-String dbPort = getRequiredEnv("DB_PORT");
-String dbName = getRequiredEnv("DB_NAME");
+        String dbUrl = getRequiredEnv("DB_URL");
 String dbUser = getRequiredEnv("DB_USER");
 String dbPassword = getRequiredEnv("DB_PASSWORD");
 
-if (dbHost == null ||
-    dbPort == null ||
-    dbName == null ||
+if (dbUrl == null ||
     dbUser == null ||
     dbPassword == null) {
 
@@ -109,12 +105,12 @@ if (dbHost == null ||
     );
 }
 
-String dbUrl =
-        "jdbc:mysql://" +
-        dbHost + ":" +
-        dbPort + "/" +
-        dbName +
-        "?sslMode=REQUIRED";
+dbUrl = normalizeDbUrl(dbUrl);
+
+System.out.println("========== REGISTER DATABASE ==========");
+System.out.println("DB URL  : " + dbUrl);
+System.out.println("DB USER : " + dbUser);
+System.out.println("=======================================");
 
         System.out.println("========== REGISTER DATABASE ==========");
         System.out.println("DB URL  : " + dbUrl);
@@ -447,7 +443,7 @@ insertStudent.setInt(
                 "FACULTY".equals(role)) {
 
                 boolean emailSent =
-                        EmailJSService.sendRegistrationEmail(
+                        EmailService.sendRegistrationEmail(
                                 email,
                                 name,
                                 role
