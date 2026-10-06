@@ -112,10 +112,6 @@ System.out.println("DB URL  : " + dbUrl);
 System.out.println("DB USER : " + dbUser);
 System.out.println("=======================================");
 
-        System.out.println("========== REGISTER DATABASE ==========");
-        System.out.println("DB URL  : " + dbUrl);
-        System.out.println("DB USER : " + dbUser);
-        System.out.println("=======================================");
 
         /*
          * =================================================

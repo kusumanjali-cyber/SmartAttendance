@@ -17,18 +17,9 @@ public class StudentAttendanceServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DB_HOST = System.getenv("DB_HOST");
-    private static final String DB_PORT = System.getenv("DB_PORT");
-    private static final String DB_NAME = System.getenv("DB_NAME");
-    private static final String DB_USER = System.getenv("DB_USER");
-    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
-
-    private static final String DB_URL =
-            "jdbc:mysql://" +
-            DB_HOST + ":" +
-            DB_PORT + "/" +
-            DB_NAME +
-            "?sslMode=REQUIRED";
+    private static final String DB_URL = System.getenv("DB_URL");
+private static final String DB_USER = System.getenv("DB_USER");
+private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -64,25 +55,7 @@ public class StudentAttendanceServlet extends HttpServlet {
             return;
         }
 
-        /*
-         * Check database configuration.
-         */
-        if (DB_HOST == null || DB_HOST.trim().isEmpty()
-                || DB_PORT == null || DB_PORT.trim().isEmpty()
-                || DB_NAME == null || DB_NAME.trim().isEmpty()
-                || DB_USER == null || DB_USER.trim().isEmpty()
-                || DB_PASSWORD == null || DB_PASSWORD.trim().isEmpty()) {
 
-            System.err.println(
-                    "StudentAttendanceServlet: Database environment variables are missing."
-            );
-
-            sendError(response,
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Database configuration is missing");
-
-            return;
-        }
 
         try {
 
